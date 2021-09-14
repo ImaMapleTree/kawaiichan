@@ -108,8 +108,7 @@ class cabinet():
             index += 1
 
     def dump_format(self):
-        if not self.ranked: print(
-            "[Error] Attempted to create a format file for a Cabinet that hasn't been ranked yet, if this is intentional you can ignore this message."); return
+        if not self.ranked: print("[Error] Attempted to create a format file for a Cabinet that hasn't been ranked yet, if this is intentional you can ignore this message."); return
         if not self.source: return
         filename = path.splitext(self.source)[0]
         DP = DictParser(self.final_object)
@@ -246,9 +245,7 @@ def load_all(dir=""):
     load_list = glob.glob(dir)
     configs = {}
     for config in load_list:
-        print(shorten_source(config))
         configs[shorten_source(config)] = load(config)
-    print(configs)
     return configs
 
 
@@ -260,12 +257,9 @@ def raw_load(source="config.ecfg", indent="\t"):
 def load(source="config.ecfg", indent="\t"):
     global SOURCE_CONFIG
     temp_path = path.join(CFG_BASE, source)
-    print(temp_path)
-    print(path.exists(temp_path))
     if source == "config.ecfg" and not path.exists(temp_path):
         open(temp_path, "w+").write(SOURCE_CONFIG);
     elif not path.exists(temp_path):
         open(temp_path, "w+")
-    print(path.exists(temp_path))
     cab = raw_load(source, indent)
     return cab.rank()
