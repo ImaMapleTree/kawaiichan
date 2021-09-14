@@ -211,7 +211,7 @@ class MusicPlayer:
         duration = str(duration).replace("00:", "", 1) if str(duration).find("00") >= 0 else str(duration)
         views = "{:,}".format(int(views)) if views != "N/A" else views
         embed = discord.Embed(title=title, description=f"**Duration:** {duration} | **Views:** {views}",
-                              colour=0x125876, url=url)
+                              colour=0xfc8403, url=url)
         embed.set_image(url=thumbnail)
         return embed
 

@@ -9,7 +9,7 @@ from os import path
 import codecs
 import json
 
-default_embed = discord.Embed(title="No song currently playing", description="But I still love you **nuzzle~**")
+default_embed = discord.Embed(title="No song currently playing", description="But I still love you **nuzzle~**", colour=0xfc8403)
 default_embed.set_image(url="https://cdn.discordapp.com/attachments/369000441117147137/887225852780224552/kawiisong.png")
 
 async def validate_reactions(message, emoji):
