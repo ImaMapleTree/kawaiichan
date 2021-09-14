@@ -73,8 +73,7 @@ async def join(ctx):
 
 @client.command(pass_context=True)
 async def source_volume(ctx, volume):
-    print(volume)
-    volume = int(volume)
+    volume = int(volume)/100
     await backend.source_volume(ctx, volume=volume)
 
 @slash.subcommand(base="volume", **utils.cmd_gen("source_volume"))
