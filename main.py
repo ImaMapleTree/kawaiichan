@@ -2,6 +2,7 @@ import discord
 import hookcord
 import utils
 import builtins
+import sys
 
 builtins.client = hookcord.Bot(intents=discord.Intents.default(), command_prefix="a!")
 client = builtins.client
@@ -69,5 +70,8 @@ async def join(ctx):
 
     await ctx.message.author.voice.channel.connect()
 
+@client.command(pass_context=True)
+async def shutdown(ctx):
+    sys.exit(2)
 
 client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ')
