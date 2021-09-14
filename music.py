@@ -101,8 +101,8 @@ class MusicPlayer:
             return m.author == self.client.user
 
         try:
-            await self.persistent_message.edit(embed=song_container[1])
-            self.current_embed = song_container[1]
+            self.current_embed = self._set_status(song_container[1])
+            await self.persistent_message.edit(embed=self.current_embed)
         except:
             pass
         song_container[2].voice_client.play(song_container[0], after=lambda x: self._end_song(self.persistent_message, self._reconstruct(song_container)))
@@ -135,7 +135,6 @@ class MusicPlayer:
         await self.check_song(ctx)
         if player.others is not None:
             for subdata in player.others:
-                print("Adding song")
                 await asyncio.sleep(1.5)
                 player = await YTDLSource.from_subdata(subdata, stream=True, volume=self._source_volume)
                 self.queue.append([player, self.get_context(player), ctx])
@@ -191,7 +190,6 @@ class MusicPlayer:
         ctx.voice_client.stop()
 
     async def source_volume(self, ctx, message=None, volume=0.5):
-        #ctx = await self._ctx_wrapper(ctx, message)
         self._source_volume = volume
 
     async def volume(self, ctx, message=None, volume=1):
