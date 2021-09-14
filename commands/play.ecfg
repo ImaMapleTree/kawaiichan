@@ -1,0 +1,8 @@
+name: play
+description: Another debug command!
+[options]
+	{query}
+		name: song
+		description: Song name or URL of media 
+		option_type: 3
+		required: true
