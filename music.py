@@ -16,7 +16,7 @@ ytdl_format_options = {
     'restrictfilenames': True,
     'ignoreerrors': True,
     'logtostderr': False,
-    'quiet': False,
+    'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
     'geo_bypass_country': 'US',
@@ -86,6 +86,7 @@ class MusicPlayer:
         self.paused = False
         self.looped = False
         self.shuffled = False
+        self.current_embed = None
 
     async def _ctx_wrapper(self, ctx, message):
         if not ctx and message:
@@ -101,6 +102,7 @@ class MusicPlayer:
 
         try:
             await self.persistent_message.edit(embed=song_container[1])
+            self.current_embed = song_container[1]
         except:
             pass
         song_container[2].voice_client.play(song_container[0], after=lambda x: self._end_song(self.persistent_message, self._reconstruct(song_container)))
@@ -116,6 +118,10 @@ class MusicPlayer:
         self.history.appendleft(song_container)
         self.client.loop.create_task(self.check_song(message=msg))
 
+    def _set_status(self, embed):
+        embed.set_footer(text=f"Looping: {self.looped} | Shuffling: {self.shuffled}", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
+        return embed
+
     async def play(self, ctx, query, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
         async for message in self.get_music_room(ctx).history():
@@ -129,13 +135,17 @@ class MusicPlayer:
         await self.check_song(ctx)
         if player.others is not None:
             for subdata in player.others:
-                await asyncio.sleep(0.1)
+                print("Adding song")
+                await asyncio.sleep(1.5)
                 player = await YTDLSource.from_subdata(subdata, stream=True, volume=self._source_volume)
                 self.queue.append([player, self.get_context(player), ctx])
-            self.update_queue_info()
+                self.update_queue_info()
 
     async def check_song(self, ctx=None, message=None):
-        if message and len(self.queue) == 0: await message.edit(embed=utils.default_embed)
+        if message and len(self.queue) == 0:
+            no_embed = self._set_status(utils.default_embed)
+            await message.edit(embed=no_embed)
+            self.current_embed = no_embed
 
         if not self.current_song:  # No song is playing
             if self.queue:
@@ -148,6 +158,8 @@ class MusicPlayer:
     async def loop(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
         self.looped = True if not self.looped else False
+        if self.current_embed:
+            await self.persistent_message.edit(embed=self._set_status(self.current_embed))
 
     async def pause(self, ctx, message=None):
         self.paused = True if not self.paused else False
@@ -166,6 +178,8 @@ class MusicPlayer:
     async def shuffle(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
         self.shuffled = True if not self.shuffled else False
+        if self.current_embed:
+            await self.persistent_message.edit(embed=self._set_status(self.current_embed))
 
     async def skip(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
@@ -181,7 +195,6 @@ class MusicPlayer:
         self._source_volume = volume
 
     async def volume(self, ctx, message=None, volume=1):
-        #ctx = await self._ctx_wrapper(ctx, message)
         self._player_volume = volume
         ctx.voice_client.volume = volume
 
@@ -213,9 +226,9 @@ class MusicPlayer:
 
     def update_queue_info(self, _=None):
         output_friendly_queue = list(self.queue)
-        output_friendly_queue.reverse()
 
         content = "**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.\n"
+        new_content = ""
         for i in range(len(output_friendly_queue)):
             entry = output_friendly_queue[i][0]
 
@@ -223,11 +236,11 @@ class MusicPlayer:
             duration = time.strftime('%H:%M:%S', time.gmtime(duration)) if duration != "00:00:00" else duration
             duration = str(duration).replace("00:", "", 1) if str(duration).find("00") >= 0 else str(duration)
             new_string = f"{len(output_friendly_queue)-i}. {entry.data.get('title', 'N/A')} [{duration}]\n"
-            if len(new_string+content) > 2000: break
-            content += new_string
+            if len(new_string+new_content+content) > 2000: break
+            new_content = new_string + new_content
             content.replace("\n", "", -1)
             i += 1
-
+        content = content + new_content
         self.client.loop.create_task(self.persistent_message.edit(content=content))
 
 
