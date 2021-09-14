@@ -212,7 +212,7 @@ class MusicPlayer:
             duration = (str(duration)).replace("00:", "", 1)
         else:
             duration = str(duration)
-        locale.setlocale(locale.LC_ALL, '')
+        locale.setlocale(locale.LC_ALL, 'en_CA.UTF-8')
         views = (str(locale.currency(int(views), symbol=False, grouping=True))).replace(".00",
                                                                                         "") if views != "N/A" else views
         embed = discord.Embed(title=title, description=f"**Duration:** {duration} | **Views:** {views}",
