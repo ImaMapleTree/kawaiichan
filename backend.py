@@ -9,7 +9,6 @@ def get_music_player(ctx, message=None):
     if guild.id not in guild_mps: guild_mps[guild.id] = mp = music.MusicPlayer(builtins.client)
     return guild_mps[guild.id]
 
-
 async def play(ctx, query, message=None):
     await get_music_player(ctx, message).play(ctx, query, message=message)
 
@@ -44,3 +43,13 @@ async def add_to_playlist(ctx, message=None):
 
 async def remove_from_playlist(ctx, message=None):
     pass
+
+async def source_volume(ctx, message=None, volume=0.5):
+    await get_music_player(ctx, message).source_volume(ctx, message=message, volume=volume)
+    try: await ctx.send(f"Source volume set to: **{volume}**")
+    except: pass
+
+async def player_volume(ctx, message=None, volume=0.5):
+    await get_music_player(ctx, message).volume(ctx, message=message, volume=volume)
+    try: await ctx.send(f"Player volume set to: **{volume}**")
+    except: pass

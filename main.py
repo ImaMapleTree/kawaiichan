@@ -47,7 +47,8 @@ async def on_raw_reaction_add(payload):
 @client.event
 async def on_guild_join(guild):
     channel = await guild.create_text_channel("song-requests")
-    await channel.send(content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.", embed=utils.default_embed)
+    msg = await channel.send(content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.", embed=utils.default_embed)
+    await utils.validate_reactions(msg, '😀')
 
 @client.event
 async def on_message(message):
@@ -69,6 +70,24 @@ async def join(ctx):
         return await ctx.voice_client.move_to(ctx.message.author.voice.channel)
 
     await ctx.message.author.voice.channel.connect()
+
+@client.command(pass_context=True)
+async def source_volume(ctx, volume):
+    print(volume)
+    volume = int(volume)
+    await backend.source_volume(ctx, volume=volume)
+
+@slash.subcommand(base="volume", **utils.cmd_gen("source_volume"))
+async def slash_source_volume(ctx, volume):
+    await backend.source_volume(ctx, volume=volume)
+
+'''
+@slash.subcommand(base="volume", **utils.cmd_gen("player_volume"))
+async def slash_player_volume(ctx, volume):
+    volume = volume if volume <= 100 else 50
+    volume = volume/100
+    await backend.player_volume(ctx, volume=volume)
+'''
 
 @client.command(pass_context=True)
 async def shutdown(ctx):

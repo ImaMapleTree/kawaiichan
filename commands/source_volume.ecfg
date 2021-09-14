@@ -1,0 +1,8 @@
+name: source
+description: DO NOT TOUCH THIS!
+[options]
+	{option1}
+		name: volume
+		description: Integer volume of source
+		option_type: 4
+		required: True

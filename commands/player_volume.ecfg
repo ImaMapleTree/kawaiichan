@@ -1,0 +1,8 @@
+name: player
+description: Adjusts the volume of the music player
+[options]
+	{option1}
+		name: volume
+		description: Volume (0-100)
+		option_type: 4
+		required: True

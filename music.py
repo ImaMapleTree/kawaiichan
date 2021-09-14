@@ -180,12 +180,12 @@ class MusicPlayer:
         self.queue.clear()
         ctx.voice_client.stop()
 
-    async def source_volume(self, ctx, messsage=None, volume=0.5):
-        ctx = await self._ctx_wrapper(ctx, message)
+    async def source_volume(self, ctx, message=None, volume=0.5):
+        #ctx = await self._ctx_wrapper(ctx, message)
         self._source_volume = volume
 
     async def volume(self, ctx, message=None, volume=1):
-        ctx = await self._ctx_wrapper(ctx, message)
+        #ctx = await self._ctx_wrapper(ctx, message)
         self._player_volume = volume
         ctx.voice_client.volume = volume
 
