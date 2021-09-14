@@ -62,15 +62,5 @@ async def slash_play(ctx, song):
     await ctx.defer()
     await backend.play(ctx, song)
 
-@client.command(pass_context=True)
-async def source_volume(ctx, volume):
-    volume = int(volume)/100
-    await backend.source_volume(ctx, volume=volume)
-
-@slash.slash(name="shutdown", description="Please don't use this, genuinely.")
-async def slash_shutdown(ctx):
-    await ctx.send("Shutting down!")
-    sys.exit(2)
-
 client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
 #client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8') #Test bot (Ezreal)
