@@ -1,6 +1,5 @@
 import asyncio
 import collections
-import datetime
 import discord
 import youtube_dl
 import time
@@ -10,26 +9,18 @@ import utils
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
+
 ytdl_format_options = {
     'format': 'bestaudio/best',
-    'extractaudio': True,
-    'audioformat': 'mp3',
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
     'logtostderr': False,
-    "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0",
-    "useragent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:92.0) Gecko/20100101 Firefox/92.0",
-    "dump-user-agent": True,
     'quiet': False,
     'no_warnings': True,
-    'forceipv4': True,
     'default_search': 'auto',
-    'source_address': '0.0.0.0',  # ipv6 addresses cause issues sometimes
-    'no-cache-dir': True,
-    'rm-cache-dir': True,
-    'nocachedir': True,
-    'rmcachedir': True
+    'geo_bypass_country': 'US',
+    'cachedir': False
 }
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
