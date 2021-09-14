@@ -1,6 +1,6 @@
 import asyncio
 import collections
-import locale
+import datetime
 import discord
 import youtube_dl
 import time
@@ -208,13 +208,8 @@ class MusicPlayer:
         duration = data.get('duration') if data.get('duration') else "00:00:00"
 
         duration = time.strftime('%H:%M:%S', time.gmtime(duration)) if duration != "00:00:00" else duration
-        if (str(duration)).find("00") >= 0:
-            duration = (str(duration)).replace("00:", "", 1)
-        else:
-            duration = str(duration)
-        locale.setlocale(locale.LC_ALL, 'en_CA.UTF-8')
-        views = (str(locale.currency(int(views), symbol=False, grouping=True))).replace(".00",
-                                                                                        "") if views != "N/A" else views
+        duration = str(duration).replace("00:", "", 1) if str(duration).find("00") >= 0 else str(duration)
+        views = "{:,}".format(int(views)) if views != "N/A" else views
         embed = discord.Embed(title=title, description=f"**Duration:** {duration} | **Views:** {views}",
                               colour=0x125876, url=url)
         embed.set_image(url=thumbnail)
@@ -228,7 +223,10 @@ class MusicPlayer:
         for i in range(len(output_friendly_queue)):
             entry = output_friendly_queue[i][0]
 
-            new_string = f"{len(output_friendly_queue)-i}. {entry.data.get('title', 'N/A')} [{entry.data.get('duration', '00:00')}s]\n"
+            duration = entry.data.get('duration', 0)
+            duration = time.strftime('%H:%M:%S', time.gmtime(duration)) if duration != "00:00:00" else duration
+            duration = str(duration).replace("00:", "", 1) if str(duration).find("00") >= 0 else str(duration)
+            new_string = f"{len(output_friendly_queue)-i}. {entry.data.get('title', 'N/A')} [{duration}]\n"
             if len(new_string+content) > 2000: break
             content += new_string
             content.replace("\n", "", -1)
