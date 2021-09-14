@@ -233,7 +233,7 @@ class MusicPlayer:
             duration = entry.data.get('duration', 0)
             duration = time.strftime('%H:%M:%S', time.gmtime(duration)) if duration != "00:00:00" else duration
             duration = str(duration).replace("00:", "", 1) if str(duration).find("00") >= 0 else str(duration)
-            new_string = f"{len(output_friendly_queue)-i}. {entry.data.get('title', 'N/A')} [{duration}]\n"
+            new_string = f"{i+1}. {entry.data.get('title', 'N/A')} [{duration}]\n"
             if len(new_string+new_content+content) > 2000: break
             new_content = new_string + new_content
             content.replace("\n", "", -1)
