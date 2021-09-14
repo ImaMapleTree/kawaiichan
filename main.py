@@ -89,6 +89,11 @@ async def slash_player_volume(ctx, volume):
     await backend.player_volume(ctx, volume=volume)
 '''
 
+@slash.slash(name="shutdown", description="Please don't use this, genuinely.")
+async def slash_shutdown(ctx):
+    await ctx.send("Shutting down!")
+    sys.exit(2)
+
 @client.command(pass_context=True)
 async def shutdown(ctx):
     sys.exit(2)
