@@ -4,7 +4,7 @@ import utils
 import builtins
 import sys
 
-builtins.client = hookcord.Bot(intents=discord.Intents.default(), command_prefix="a!")
+builtins.client = hookcord.Bot(intents=discord.Intents.default(), command_prefix="k!")
 client = builtins.client
 import backend
 slash = hookcord.SlashCommand(client, sync_commands=True)
