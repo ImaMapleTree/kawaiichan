@@ -1,12 +1,12 @@
 import music
 import builtins
 
-guild_mps = []
+guild_mps = {}
 
 
 def get_music_player(ctx, message=None):
     guild = ctx.guild if ctx else message.guild
-    if guild.id not in guild_mps: guild_mps[guild.id] = mp = music.MusicPlayer(builtins.client)
+    if guild.id not in guild_mps: guild_mps[guild.id] = music.MusicPlayer(builtins.client)
     return guild_mps[guild.id]
 
 async def play(ctx, query, message=None):
