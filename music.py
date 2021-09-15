@@ -188,6 +188,7 @@ class MusicPlayer:
     def is_alone(self):
         if not self.persistent_message: return False
         if not self.persistent_message.guild.voice_client: return False
+        print(len(self.persistent_message.guild.voice_client.channel.members))
         return len(self.persistent_message.guild.voice_client.channel.members) <= 1
 
     async def loop(self, ctx, message=None):
