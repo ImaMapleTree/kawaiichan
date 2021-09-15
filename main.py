@@ -73,6 +73,12 @@ async def on_message(message):
         if message.author == client.user: return
         await message.delete()
 
+        if not await message.channel.history().flatten():
+            msg = await message.channel.send(
+                content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.",
+                embed=utils.default_embed)
+            await utils.validate_reactions(msg, '😀')
+
         gs = guild_settings.get(str(message.author.guild.id))
         if gs:
             if [r for r in message.author.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"): return
