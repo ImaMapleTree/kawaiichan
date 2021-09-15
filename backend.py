@@ -5,11 +5,25 @@ import music
 import builtins
 
 import random
+import importlib
 
 guild_mps = {}
 guild_cache = {}
 global alone_list
 alone_list = []
+
+
+def _reload_music():
+    for gid in guild_mps.keys():
+        if not guild_cache.get(gid): guild_cache[gid] = {}
+        guild_cache[gid]["cached_player"] = guild_mps[gid].memory_dict()
+    guild_mps.clear()
+    importlib.reload(music)
+    for gid in list(guild_cache.keys()):
+        if not guild_cache[gid].get("cached_player"): continue
+        memory = guild_cache[gid].get("cached_player")
+        guild_mps[gid] = music.MusicPlayer.from_dict(memory)
+        guild_cache[gid].pop("cached_player")
 
 
 def get_music_player(ctx, message=None):

@@ -106,10 +106,14 @@ async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command 
 
 
 async def minutetick():
+    uptime = 0
     while True:
+        if uptime % 240 == 0 and uptime != 0:
+            backend._reload_music()
         await backend.expire_players()
         await backend.mark_alone()
         await asyncio.sleep(60)
+        uptime += 1
 
 
 client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot

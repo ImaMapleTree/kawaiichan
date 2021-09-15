@@ -90,6 +90,17 @@ class MusicPlayer:
         self.last_song_timestamp = time.time()
         self.marks = 0
 
+    @classmethod
+    def from_dict(cls, mp_dict):
+        mp = cls(mp_dict["client"], mp_dict["looping"], mp_dict["shuffling"])
+        mp.queue = list(mp_dict["queue"])
+        mp.history = collections.deque(mp_dict["history"], maxlen=5)
+        mp.persistent_message = mp_dict["p_message"]
+        mp.paused = mp_dict["paused"]
+        mp.current_embed = mp_dict["embed"]
+        return mp
+
+
     async def _ctx_wrapper(self, ctx, message):
         if not ctx and message:
             ctx = PseudoContext(message)
@@ -184,6 +195,19 @@ class MusicPlayer:
         self.looped = True if not self.looped else False
         if self.current_embed:
             await self.persistent_message.edit(embed=self._set_status(self.current_embed))
+
+    def memory_dict(self):
+        memory = {}
+        memory["client"] = self.client
+        memory["looping"] = self.looped
+        memory["shuffling"] = self.shuffled
+        memory["queue"] = self.queue
+        memory["history"] = self.history
+        memory["p_message"] = self.persistent_message
+        memory["embed"] = self.current_embed
+        memory["paused"] = self.paused
+        return memory
+
 
     async def pause(self, ctx, message=None):
         self.paused = True if not self.paused else False
