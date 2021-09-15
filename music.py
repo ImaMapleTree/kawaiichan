@@ -88,6 +88,7 @@ class MusicPlayer:
         self.shuffled = shuffled
         self.current_embed = None
         self.last_song_timestamp = time.time()
+        self.marks = 0
 
     async def _ctx_wrapper(self, ctx, message):
         if not ctx and message:
@@ -172,6 +173,11 @@ class MusicPlayer:
         if not self.persistent_message.guild.voice_client: return self.last_song_timestamp
         if self.persistent_message.guild.voice_client.is_playing(): return time.time()
         return self.last_song_timestamp
+
+    def is_alone(self):
+        if not self.persistent_message: return False
+        if not self.persistent_message.guild.voice_client: return False
+        return len(self.persistent_message.guild.voice_client.channel.members) <= 1
 
     async def loop(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)

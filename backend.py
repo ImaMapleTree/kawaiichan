@@ -4,8 +4,12 @@ import time
 import music
 import builtins
 
+import random
+
 guild_mps = {}
 guild_cache = {}
+global alone_list
+alone_list = []
 
 
 def get_music_player(ctx, message=None):
@@ -70,10 +74,26 @@ async def expire_players():
     pop_list = []
     for gid in guild_mps.keys():
         if st - guild_mps[gid].check_time() >= minutes*60:
-            mp = guild_mps[gid]
             pop_list.append(gid)
-            if gid not in guild_cache: guild_cache[gid] = {}
-            guild_cache[gid]["mp_cookies"] = [mp.looped, mp.shuffled]
-            await mp.abandon()
+            await destroy_player(gid)
+
     [guild_mps.pop(gid) for gid in pop_list]
     pop_list.clear()
+
+async def mark_alone():
+    global alone_list
+    if not alone_list: alone_list = list(guild_mps.keys())
+    for i in range(1000):
+        if not alone_list: break
+        gid = alone_list.pop(random.randint(0, len(alone_list)-1))
+        mp = guild_mps[gid]
+        mp.marks = mp.marks + 1 if mp.is_alone() else 0
+        if mp.marks >= 2:
+            await destroy_player(gid)
+            guild_mps.pop(gid)
+
+async def destroy_player(gid):
+    mp = guild_mps[gid]
+    if gid not in guild_cache: guild_cache[gid] = {}
+    guild_cache[gid]["mp_cookies"] = [mp.looped, mp.shuffled]
+    await mp.abandon()

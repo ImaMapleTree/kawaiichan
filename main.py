@@ -108,8 +108,9 @@ async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command 
 async def minutetick():
     while True:
         await backend.expire_players()
+        await backend.mark_alone()
         await asyncio.sleep(60)
 
 
-client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
+#client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
+client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
