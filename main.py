@@ -111,7 +111,7 @@ async def minutetick():
         if uptime % 240 == 0 and uptime != 0:
             backend._reload_music()
         await backend.expire_players()
-        await backend.mark_alone()
+        #await backend.mark_alone()
         await asyncio.sleep(60)
         uptime += 1
 
