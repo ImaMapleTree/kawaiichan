@@ -1,23 +1,34 @@
+import os
+
 import discord
+from discord.ext import commands
 import hookcord
 import utils
 import builtins
 import sys
 
-builtins.client = hookcord.Bot(intents=discord.Intents.default(), command_prefix="k!")
-client = builtins.client
+client = hookcord.Bot(intents=discord.Intents.default(), command_prefix=commands.when_mentioned_or("k!"))
+builtins.client = client
 import backend
+
 slash = hookcord.SlashCommand(client, sync_commands=True)
 
+global guild_settings
+guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
+guild_settings = utils.JOpen(guild_settings_path, "r+")
+if guild_settings is None: guild_settings = {}
 
 @client.event
 async def on_ready():
     print("Ready!")
     guild_ids = [guild.id for guild in client.guilds]
     utils.get_emoji_list(client)
+    client.loop.create_task(minute_tick())
+
 
 @client.event
 async def on_raw_reaction_add(payload):
+    global guild_settings
     channel = await client.fetch_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
     emoji = payload.emoji
@@ -30,8 +41,11 @@ async def on_raw_reaction_add(payload):
     if valid_reaction is None: return
 
     user = await client.fetch_user(payload.user_id)
-
     await valid_reaction.remove(user)
+
+    gs = guild_settings.get(str(channel.guild.id))
+    if gs:
+        if [r for r in payload.member.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"): return
 
     emoji = emoji.name
     if emoji == '⏯️': await backend.pause(None, message)
@@ -47,20 +61,40 @@ async def on_raw_reaction_add(payload):
 @client.event
 async def on_guild_join(guild):
     channel = await guild.create_text_channel("song-requests")
-    msg = await channel.send(content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.", embed=utils.default_embed)
+    msg = await channel.send(
+        content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.",
+        embed=utils.default_embed)
     await utils.validate_reactions(msg, '😀')
+
 
 @client.event
 async def on_message(message):
+    global guild_settings
     if message.channel.name == "song-requests":
         if message.author == client.user: return
         await message.delete()
+
+        gs = guild_settings.get(str(message.author.guild.id))
+        if gs:
+            if [r for r in message.author.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"): return
+
         await backend.play(None, message.content, message=message)
 
-@slash.slash(**utils.cmd_gen("play"))
-async def slash_play(ctx, song):
-    await ctx.defer()
-    await backend.play(ctx, song)
+@slash.subcommand(base="set", **utils.command_generator("set_dj_role"))
+async def use_dj_role(ctx, role=None): # Defines a new "context" (ctx) command called "ping."
+    global guild_settings
+    if not ctx.author.permissions_in(ctx.channel).administrator: return await ctx.send("You don't have permission for that (Administrator only)", hidden=True)
+    id = str(ctx.author.guild.id)
+    if not id in guild_settings: guild_settings[id] = {}
+    if not role:
+        guild_settings[id]["music_role"] = None
+        utils.JOpen(guild_settings_path, "w+", guild_settings)
+        return await ctx.send("Removed music role", hidden=True)
+    guild_settings[id]["music_role"] = role.id
+    print(guild_settings, id)
+    utils.JOpen(guild_settings_path, "w+", guild_settings)
+    return await ctx.send(f"Set music role as **{role}**", hidden=True)
+
 
 client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8') #Test bot (Ezreal)
+#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)

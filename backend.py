@@ -1,7 +1,7 @@
 import music
 import builtins
 
-guild_mps = {}
+guild_mps = []
 
 
 def get_music_player(ctx, message=None):

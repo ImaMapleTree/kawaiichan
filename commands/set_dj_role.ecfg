@@ -1,0 +1,8 @@
+name: music_role
+description: Specifies which role should be allowed to queue/change the music.
+[options]
+	{role}
+		name: role
+		description: If not specified everyone can interact with the music.
+		option_type: 8
+		required: false
