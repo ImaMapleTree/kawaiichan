@@ -23,7 +23,6 @@ async def on_ready():
     print("Ready!")
     guild_ids = [guild.id for guild in client.guilds]
     utils.get_emoji_list(client)
-    client.loop.create_task(minute_tick())
 
 
 @client.event
