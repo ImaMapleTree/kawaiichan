@@ -75,7 +75,7 @@ class MusicList(list):
 
 
 class MusicPlayer:
-    def __init__(self, client):
+    def __init__(self, client, looped=False, shuffled=False):
         self._player_volume = 1
         self._source_volume = 0.5
         self.queue = []
@@ -84,9 +84,10 @@ class MusicPlayer:
         self.client = client
         self.persistent_message = None
         self.paused = False
-        self.looped = False
-        self.shuffled = False
+        self.looped = looped
+        self.shuffled = shuffled
         self.current_embed = None
+        self.last_song_timestamp = time.time()
 
     async def _ctx_wrapper(self, ctx, message):
         if not ctx and message:
@@ -112,11 +113,15 @@ class MusicPlayer:
         return [song_container[0].copy(), song_container[1], song_container[2]]
 
     def _end_song(self, msg, song_container):
+        if time.time() - self.last_song_timestamp < 0.5:
+            print("Caught out-of control loop!")
+            self.looped = False #Catching system in-case the video errors while looping and starts to queue a billion times.
         self.current_song = None
         if self.looped:
             self.queue.append(song_container)
         self.history.appendleft(song_container)
         self.client.loop.create_task(self.check_song(message=msg))
+        self.last_song_timestamp = time.time()
 
     def _set_status(self, embed):
         embed.set_footer(text=f"Looping: {self.looped} | Shuffling: {self.shuffled}", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
@@ -140,6 +145,14 @@ class MusicPlayer:
                 self.queue.append([player, self.get_context(player), ctx])
                 self.update_queue_info()
 
+    async def abandon(self):
+        self.queue.clear()
+        self.history.clear()
+        if not self.persistent_message: return
+        if not self.persistent_message.guild.voice_client: return
+        await self.persistent_message.guild.voice_client.disconnect()
+
+
     async def check_song(self, ctx=None, message=None):
         if message and len(self.queue) == 0:
             no_embed = self._set_status(utils.default_embed)
@@ -153,6 +166,12 @@ class MusicPlayer:
                 await self._play_song(self.current_song)
 
         self.update_queue_info()
+
+    def check_time(self):
+        if not self.persistent_message: return self.last_song_timestamp
+        if not self.persistent_message.guild.voice_client: return self.last_song_timestamp
+        if self.persistent_message.guild.voice_client.is_playing(): return time.time()
+        return self.last_song_timestamp
 
     async def loop(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)

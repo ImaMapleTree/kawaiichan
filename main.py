@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 import discord
@@ -5,7 +6,6 @@ from discord.ext import commands
 import hookcord
 import utils
 import builtins
-import sys
 
 client = hookcord.Bot(intents=discord.Intents.default(), command_prefix=commands.when_mentioned_or("k!"))
 builtins.client = client
@@ -18,11 +18,13 @@ guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
 guild_settings = utils.JOpen(guild_settings_path, "r+")
 if guild_settings is None: guild_settings = {}
 
+
 @client.event
 async def on_ready():
     print("Ready!")
     guild_ids = [guild.id for guild in client.guilds]
     utils.get_emoji_list(client)
+    client.loop.create_task(minutetick())
 
 
 @client.event
@@ -85,10 +87,12 @@ async def on_message(message):
 
         await backend.play(None, message.content, message=message)
 
+
 @slash.subcommand(base="set", **utils.command_generator("set_dj_role"))
-async def use_dj_role(ctx, role=None): # Defines a new "context" (ctx) command called "ping."
+async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command called "ping."
     global guild_settings
-    if not ctx.author.permissions_in(ctx.channel).administrator: return await ctx.send("You don't have permission for that (Administrator only)", hidden=True)
+    if not ctx.author.permissions_in(ctx.channel).administrator: return await ctx.send(
+        "You don't have permission for that (Administrator only)", hidden=True)
     id = str(ctx.author.guild.id)
     if not id in guild_settings: guild_settings[id] = {}
     if not role:
@@ -101,5 +105,11 @@ async def use_dj_role(ctx, role=None): # Defines a new "context" (ctx) command c
     return await ctx.send(f"Set music role as **{role}**", hidden=True)
 
 
-client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
+async def minutetick():
+    while True:
+        await backend.expire_players()
+        await asyncio.sleep(60)
+
+
+# client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
+client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
