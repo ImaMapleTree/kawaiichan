@@ -33,6 +33,12 @@ async def validate_reactions(message, emoji):
         return [reaction for reaction in message.reactions if reaction.emoji == emoji.name][0]
     return None
 
+async def get_members_in_call(client, guild):
+    if not guild.voice_client: return []
+    if len(guild.voice_client.channel.members) >= len(guild.voice_client.channel.voice_states):
+        return guild.voice_client.channel.members
+    return [await guild.fetch_member(member_id) for member_id in guild.voice_client.channel.voice_states.keys()]
+
 
 
 def shorten_source(source):

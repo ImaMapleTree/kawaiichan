@@ -101,7 +101,7 @@ async def mark_alone():
         if not alone_list: break
         gid = alone_list.pop(random.randint(0, len(alone_list)-1))
         mp = guild_mps[gid]
-        mp.marks = mp.marks + 1 if mp.is_alone() else 0
+        mp.marks = mp.marks + 1 if await mp.is_alone() else 0
         if mp.marks >= 2:
             await destroy_player(gid)
             guild_mps.pop(gid)

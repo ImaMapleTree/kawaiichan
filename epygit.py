@@ -5,7 +5,7 @@ import epycmd
 
 args = sys.argv[1:]
 try:
-	opts, args =  getopt.getopt(args,"d:")
+	opts, args =  getopt.getopt(args,"d:m:g:r:i:")
 except getopt.GetoptError:
 	sys.exit()
 
@@ -13,6 +13,8 @@ dir = os.getcwd()
 message = "Script-Push"
 git_url = None
 
+ignore = []
+remove = []
 for opt, arg in opts:
 	if opt == "-d":
 		dir = arg
@@ -20,6 +22,11 @@ for opt, arg in opts:
 		message = arg
 	if opt == "-g":
 		git_url = arg
+	if opt == "-r":
+		remove = arg.split(",")
+		ignore += remove
+	if opt == "-i":
+		ignore += arg.split(",")
 		
 CMD = epycmd.CMDBuilder()
 CMD.cd(dir)
@@ -36,6 +43,8 @@ if not os.path.exists(os.path.join(dir, ".git")):
 	CMD = epycmd.CMDBuilder()
 	CMD.cd(dir)
 CMD.git('add -A')
+for f in ignore: CMD.git(f'reset {f}')
+for f in remove: CMD.git(f'rm --cached {f}')
 CMD.git(f'commit -m "{message}" -a')
 CMD.git('push --set-upstream origin main')
 os.system(CMD.build())

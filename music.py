@@ -1,5 +1,7 @@
 import asyncio
 import collections
+import math
+
 import discord
 import youtube_dl
 import time
@@ -78,7 +80,7 @@ class MusicPlayer:
     def __init__(self, client, looped=False, shuffled=False):
         self._player_volume = 1
         self._source_volume = 0.5
-        self.queue = []
+        self.queue = collections.deque()
         self.history = collections.deque(maxlen=5)
         self.current_song = None
         self.client = client
@@ -93,7 +95,7 @@ class MusicPlayer:
     @classmethod
     def from_dict(cls, mp_dict):
         mp = cls(mp_dict["client"], mp_dict["looping"], mp_dict["shuffling"])
-        mp.queue = list(mp_dict["queue"])
+        mp.queue = collections.deque(mp_dict["queue"])
         mp.history = collections.deque(mp_dict["history"], maxlen=5)
         mp.persistent_message = mp_dict["p_message"]
         mp.paused = mp_dict["paused"]
@@ -151,11 +153,13 @@ class MusicPlayer:
         self.queue.append([player, self.get_context(player), ctx])
         await self.check_song(ctx)
         if player.others is not None:
+            i = 0;
+            chunk_size = math.ceil(len(player.others)/9)
             for subdata in player.others:
-                await asyncio.sleep(1.5)
-                player = await YTDLSource.from_subdata(subdata, stream=True, volume=self._source_volume)
+                player = await YTDLSource.from_subdata(subdata, stream=True, volume=self._source_volume); i += 1
                 self.queue.append([player, self.get_context(player), ctx])
-                self.update_queue_info()
+                if i % chunk_size == 0: await self.update_queue_info()
+            await self.update_queue_info()
 
     async def abandon(self):
         self.queue.clear()
@@ -174,10 +178,11 @@ class MusicPlayer:
         if not self.current_song:  # No song is playing
             if self.queue:
                 index = 0 if not self.shuffled else random.randint(0, len(self.queue)-1)
-                self.current_song = self.queue.pop(index)
+                if not self.shuffled: self.current_song = self.queue.pop() #self.queue.popleft()
+                else: self.current_song = self.queue[index]; self.queue.remove(self.current_song)
                 await self._play_song(self.current_song)
 
-        self.update_queue_info()
+        await self.update_queue_info()
 
     def check_time(self):
         if not self.persistent_message: return self.last_song_timestamp
@@ -185,12 +190,9 @@ class MusicPlayer:
         if self.persistent_message.guild.voice_client.is_playing(): return time.time()
         return self.last_song_timestamp
 
-    def is_alone(self):
+    async def is_alone(self):
         if not self.persistent_message: return False
-        if not self.persistent_message.guild.voice_client: return False
-        print(self.persistent_message.guild.voice_client.channel)
-        print(self.persistent_message.guild.voice_client.channel.members)
-        return len(self.persistent_message.guild.voice_client.channel.members) <= 1
+        return len(await utils.get_members_in_call(self.client, self.persistent_message.guild)) <= 1
 
     async def loop(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
@@ -223,7 +225,7 @@ class MusicPlayer:
         ctx.voice_client.stop()
         await asyncio.sleep(0.5)
         self.queue.insert(0, self.history.popleft())
-        self.update_queue_info()
+        await self.update_queue_info()
 
     async def shuffle(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
@@ -273,13 +275,11 @@ class MusicPlayer:
         embed.set_image(url=thumbnail)
         return embed
 
-    def update_queue_info(self, _=None):
-        output_friendly_queue = list(self.queue)
-
+    async def update_queue_info(self, _=None):
         content = "**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.\n"
         new_content = ""
-        for i in range(len(output_friendly_queue)):
-            entry = output_friendly_queue[i][0]
+        for i in range(len(self.queue)):
+            entry = self.queue[i][0]
 
             duration = entry.data.get('duration', 0)
             duration = time.strftime('%H:%M:%S', time.gmtime(duration)) if duration != "00:00:00" else duration
@@ -290,7 +290,7 @@ class MusicPlayer:
             content.replace("\n", "", -1)
             i += 1
         content = content + new_content
-        self.client.loop.create_task(self.persistent_message.edit(content=content))
+        await self.persistent_message.edit(content=content)
 
 
 class YTDLSource(discord.PCMVolumeTransformer):
