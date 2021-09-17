@@ -1,5 +1,6 @@
 import asyncio
 import time
+import os
 
 import music
 import builtins
@@ -7,10 +8,15 @@ import builtins
 import random
 import importlib
 
+import utils
+
 guild_mps = {}
 guild_cache = {}
 global alone_list
 alone_list = []
+
+guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
+guild_settings = builtins.guild_settings
 
 
 def _reload_music():
@@ -34,7 +40,10 @@ def get_music_player(ctx, message=None):
         if cached:
             looped = cached["mp_cookies"][0] if cached.get("mp_cookies") else False
             shuffled = cached["mp_cookies"][1] if cached.get("mp_cookies") else False
-        guild_mps[guild.id] = music.MusicPlayer(builtins.client, looped=looped, shuffled=shuffled)
+        pref = {}
+        if guild_settings.get(str(guild.id)):
+            pref = guild_settings.get(str(guild.id)).get("preferences", {})
+        guild_mps[guild.id] = music.MusicPlayer(builtins.client, looped=looped, shuffled=shuffled, preferences=pref)
     return guild_mps[guild.id]
 
 async def play(ctx, query, message=None):
@@ -47,6 +56,18 @@ async def pause(ctx, message=None):
 
 async def stop(ctx, message=None):
     await get_music_player(ctx, message).stop(ctx, message)
+
+async def music_player_preference(ctx, setting, value, message=None):
+    guild = ctx.guild if ctx else message.guild
+    gid = guild.id
+    if not str(gid) in guild_settings: guild_settings[str(gid)] = {}
+    GS = guild_settings[str(gid)]
+    if not "preferences" in GS: GS["preferences"] = {}
+    if value: GS["preferences"][setting] = value
+    else:
+        if hasattr(GS, setting): GS.pop(setting)
+    utils.JOpen(guild_settings_path, "w+", guild_settings)
+        get_music_player(ctx, message).update_preferences(GS)
 
 
 async def previous(ctx, message=None):

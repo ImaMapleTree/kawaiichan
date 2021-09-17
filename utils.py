@@ -9,9 +9,16 @@ from os import path
 import codecs
 import json
 
+
 default_embed = discord.Embed(title="No song currently playing", description="But I still love you **nuzzle~**", colour=0xfc8403)
 default_embed.set_image(url="https://cdn.discordapp.com/attachments/369000441117147137/887225852780224552/kawiisong.png")
 default_embed.set_footer(text="Looping: False | Shuffling: False", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
+
+def create_default_embed(description="To add a song to queue, type a title in the chat.", url="https://cdn.discordapp.com/attachments/369000441117147137/887225852780224552/kawiisong.png", color=0xfc8403):
+    embed = discord.Embed(title="No song currently playing", description=description, colour=color)
+    embed.set_image(url=url)
+    embed.set_footer(text="Looping: False | Shuffling: False", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
+    return embed
 
 async def validate_reactions(message, emoji):
     expected_reactions = ['⏯️', '⏹️', '⏮️', '⏭️', '🔁', '🔀', '⭐', '❌']

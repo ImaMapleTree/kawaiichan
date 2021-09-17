@@ -9,14 +9,18 @@ import builtins
 
 client = hookcord.Bot(intents=discord.Intents.default(), command_prefix=commands.when_mentioned_or("k!"))
 builtins.client = client
-import backend
-
-slash = hookcord.SlashCommand(client, sync_commands=True)
 
 global guild_settings
 guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
 guild_settings = utils.JOpen(guild_settings_path, "r+")
 if guild_settings is None: guild_settings = {}
+builtins.guild_settings = guild_settings
+
+import backend
+
+slash = hookcord.SlashCommand(client, sync_commands=True)
+
+
 
 
 @client.event
@@ -85,7 +89,14 @@ async def on_message(message):
         if gs:
             if [r for r in message.author.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"): return
 
-        await backend.play(None, message.content, message=message)
+        if message.content.startswith("-queue_image"):
+            await backend.music_player_preference(None, "queue_image", message.content.replace("-queue_image ", ""), message=message)
+        elif message.content.startswith("-queue_description"):
+            await backend.music_player_preference(None, "queue_description", message.content.replace("-queue_description ", ""), message=message)
+        elif message.content.startswith("-queue_color"):
+            await backend.music_player_preference(None, "queue_color", int(message.content.replace("-queue_color ", "")), message=message)
+        else:
+            await backend.play(None, message.content, message=message)
 
 
 @slash.subcommand(base="set", **utils.command_generator("set_dj_role"))
@@ -100,7 +111,6 @@ async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command 
         utils.JOpen(guild_settings_path, "w+", guild_settings)
         return await ctx.send("Removed music role", hidden=True)
     guild_settings[id]["music_role"] = role.id
-    print(guild_settings, id)
     utils.JOpen(guild_settings_path, "w+", guild_settings)
     return await ctx.send(f"Set music role as **{role}**", hidden=True)
 
@@ -116,5 +126,5 @@ async def minutetick():
         uptime += 1
 
 
-client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
+#client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
+client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
