@@ -67,7 +67,7 @@ async def music_player_preference(ctx, setting, value, message=None):
     else:
         if hasattr(GS, setting): GS.pop(setting)
     utils.JOpen(guild_settings_path, "w+", guild_settings)
-        get_music_player(ctx, message).update_preferences(GS)
+    get_music_player(ctx, message).update_preferences(GS)
 
 
 async def previous(ctx, message=None):
