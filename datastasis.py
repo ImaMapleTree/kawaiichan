@@ -104,7 +104,8 @@ class Stasis(metaclass=StasisMetaclass):
 
         if self._shared_memory:
             self._shared_memory.close()
-            self._shared_memory.unlink()
+            try: self._shared_memory.unlink()
+            except: pass
 
         self._stasis_queue = Queue()
         self._stasis_thread = PersistentProcess(data, self._stasis_queue, name=self.name,
@@ -125,7 +126,8 @@ class Stasis(metaclass=StasisMetaclass):
         p.terminate()
         if self._shared_memory:
             self._shared_memory.close()
-            self._shared_memory.unlink()
+            try: self._shared_memory.unlink()
+            except: pass
         if self._stasis_thread:
             self._stasis_thread.terminate()
             self._stasis_queue.close()
