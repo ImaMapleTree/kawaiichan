@@ -3,6 +3,7 @@ import os
 import pickle
 
 import discord
+import psutil
 from discord.ext import commands
 import hookcord
 import utils
@@ -131,8 +132,10 @@ async def restart(ctx):
     backend.dump_mps()
     print(os.path.abspath(os.path.join(os.getcwd(), sys.argv[0])))
     try:
-        os.execv(sys.executable, ['python'] + [os.path.abspath(os.path.join(os.getcwd(), sys.argv))])
+        os.execv(sys.executable, ['python'] + [os.path.abspath(os.path.join(os.getcwd(), sys.argv[0]))])
     except:
+        p = psutil.Process(pid=os.getpid())
+        p.terminate()
         sys.exit(2)
 
 @client.command(pass_context=True)
