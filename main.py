@@ -166,9 +166,10 @@ async def minutetick():
     uptime = 0
     while True:
         if uptime % 240 == 0 and uptime != 0:
-            print("RESTARTING")
-            backend.dump_mps()
-            os.execv(sys.executable, ['python'] + [os.path.abspath(sys.argv[0])])
+            backend._reload_music()
+            #print("RESTARTING")
+            #backend.dump_mps()
+            #os.execv(sys.executable, ['python'] + [os.path.abspath(sys.argv[0])])
         await backend.expire_players()
         await backend.mark_alone()
         await asyncio.sleep(60)
