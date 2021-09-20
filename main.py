@@ -129,7 +129,7 @@ async def use_dj_role(ctx, role=None):
 async def restart(ctx):
     if ctx.message.author.id not in [211664640831127553]: return
     backend.dump_mps()
-    os.execlp('python', 'python', __file__, *sys.argv)
+    os.execv(sys.argv[0], sys.argv)
 
 @client.command(pass_context=True)
 async def whatis(ctx, variable, do_repr=False):
