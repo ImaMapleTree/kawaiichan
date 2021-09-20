@@ -35,14 +35,14 @@ class PersistentProcess(Process):
         self.raw_data = {"data": self.data, "pid": os.getpid()}
         self.data = pickle.dumps(self.raw_data)
         try: self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
-        except WindowsError:
+        except OSError:
             self.shm = shared_memory.SharedMemory(name=self.shm_name)
             self.shm.close()
             self.shm.unlink()
             # Attempts to use the same shm_name again after unlinking the previous one,
             # if this doesn't work uses new name in place.
             try: self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
-            except WindowsError:
+            except OSError:
                 self.shm = shared_memory.SharedMemory(create=True, size=len(self.data))
         self.shm_name = self.shm.name
         self.queue.put(self.shm_name)
@@ -93,7 +93,7 @@ class Stasis(metaclass=StasisMetaclass):
     def has_memory(self):
         if not self._shared_memory:
             try: self._shared_memory = shared_memory.SharedMemory(name=self.name)
-            except WindowsError: return False
+            except OSError: return False
         return True
 
 
