@@ -36,6 +36,7 @@ async def on_ready():
         mpm = s.access()
         await backend.reconstruct_players(mpm)
         s.terminate()
+    print("Ready!")
 
 
 @client.event
