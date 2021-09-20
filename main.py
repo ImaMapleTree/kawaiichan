@@ -1,11 +1,17 @@
 import asyncio
 import os
+import pickle
 
 import discord
 from discord.ext import commands
 import hookcord
 import utils
 import builtins
+
+import sys
+import subprocess
+
+from datastasis import Stasis
 
 client = hookcord.Bot(intents=discord.Intents.default(), command_prefix=commands.when_mentioned_or("k!"))
 builtins.client = client
@@ -20,15 +26,16 @@ import backend
 
 slash = hookcord.SlashCommand(client, sync_commands=True)
 
-
-
-
 @client.event
 async def on_ready():
-    print("Ready!")
     guild_ids = [guild.id for guild in client.guilds]
     utils.get_emoji_list(client)
     client.loop.create_task(minutetick())
+    s = Stasis(name="MusicPlayerMemory")
+    if s.has_memory():
+        mpm = s.access()
+        await backend.reconstruct_players(mpm)
+        s.terminate()
 
 
 @client.event
@@ -75,8 +82,10 @@ async def on_guild_join(guild):
 @client.event
 async def on_message(message):
     global guild_settings
+    await client.process_commands(message)
     if message.channel.name == "song-requests":
-        if message.author == client.user: return
+        if message.author == client.user:
+            return
         await message.delete()
 
         if not await message.channel.history().flatten():
@@ -87,7 +96,8 @@ async def on_message(message):
 
         gs = guild_settings.get(str(message.author.guild.id))
         if gs:
-            if [r for r in message.author.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"): return
+            if [r for r in message.author.roles if r.id == gs.get("music_role")] == [] and gs.get("music_role"):
+                return
 
         if message.content.startswith("-queue_image"):
             await backend.music_player_preference(None, "queue_image", message.content.replace("-queue_image ", ""), message=message)
@@ -100,7 +110,7 @@ async def on_message(message):
 
 
 @slash.subcommand(base="set", **utils.command_generator("set_dj_role"))
-async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command called "ping."
+async def use_dj_role(ctx, role=None):
     global guild_settings
     if not ctx.author.permissions_in(ctx.channel).administrator: return await ctx.send(
         "You don't have permission for that (Administrator only)", hidden=True)
@@ -114,17 +124,49 @@ async def use_dj_role(ctx, role=None):  # Defines a new "context" (ctx) command 
     utils.JOpen(guild_settings_path, "w+", guild_settings)
     return await ctx.send(f"Set music role as **{role}**", hidden=True)
 
+@client.command(pass_context=True)
+async def restart(ctx):
+    if ctx.message.author.id not in [211664640831127553]: return
+    backend.dump_mps()
+    os.execl(sys.executable, 'python', __file__, *sys.argv[1:])
+
+@client.command(pass_context=True)
+async def whatis(ctx, variable, do_repr=False):
+    variables = globals().copy()
+    variables.update(locals())
+    vars = variable.split(".")
+    variable = variables.get(vars[0])
+
+    if variable not in variables:
+        res = backend.whatis(vars[0])
+
+    for v in vars:
+        res = getattr(res, v)
+
+    if do_repr: await ctx.send(repr(res))
+    else: await ctx.send(res)
+
+@client.command(pass_context=True)
+async def execute(ctx, *args):
+    if ctx.message.author.id not in [211664640831127553]: return
+    commands = " ".join(args).split(" | ")
+    for command in commands:
+        await ctx.send(str(exec(command)))
+
 
 async def minutetick():
     uptime = 0
     while True:
         if uptime % 240 == 0 and uptime != 0:
-            backend._reload_music()
+            print("RESTARTING")
+            backend.dump_mps()
+            os.execl(sys.executable, 'python', __file__, *sys.argv[1:])
         await backend.expire_players()
         await backend.mark_alone()
         await asyncio.sleep(60)
         uptime += 1
 
 
-client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-#client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
+if __name__ == "__main__":
+    client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
+    #client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)

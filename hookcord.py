@@ -1,13 +1,15 @@
+import discord
 from discord.ext.commands import core, bot, errors
 import discord_slash
+
 
 class HookedMixin(core.GroupMixin):
 	def __init__(self, *args, **kwargs):
 		super(HookedMixin, self).__init__(*args, **kwargs)
-		print("Hooked!")
-		
+
 	def add_command(self, command):
-		try: super().add_command(command)
+		try:
+			super().add_command(command)
 		except errors.CommandRegistrationError:
 			print(f"[Warning] - The command {command} could not be added, this behavior is bypassed in the hooked version of this class.")
 			if command.name in self.all_commands:
@@ -16,17 +18,16 @@ class HookedMixin(core.GroupMixin):
 					if alias in self.all_commands:
 						self.all_commands.pop(alias)
 				super().add_command(command)
-			
 
 class Bot(bot.Bot):
 	def __init__(self, *args, **kwargs):
 		bot.BotBase.__bases__ = (HookedMixin,)
 		super(Bot, self).__init__(*args, **kwargs)
-		
+
 class SlashCommand(discord_slash.SlashCommand):
 	def __init__(self, *args, **kwargs):
 		super(SlashCommand, self).__init__(*args, **kwargs)
-		
+
 	def add_slash_command(self, cmd, name: str=None, *args, **kwargs):
 		try: super().add_slash_command(cmd, name, *args, **kwargs)
 		except discord_slash.error.DuplicateCommand:
@@ -34,4 +35,3 @@ class SlashCommand(discord_slash.SlashCommand):
 			if name in self.commands:
 				self.commands.pop(name)
 				super().add_slash_command(cmd, name, *args, **kwargs)
-		

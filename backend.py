@@ -1,4 +1,5 @@
 import asyncio
+import pickle
 import time
 import os
 
@@ -9,6 +10,10 @@ import random
 import importlib
 
 import utils
+from multiprocessing.shared_memory import SharedMemory
+import multiprocessing
+
+from datastasis import Stasis
 
 guild_mps = {}
 guild_cache = {}
@@ -17,7 +22,6 @@ alone_list = []
 
 guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
 guild_settings = builtins.guild_settings
-
 
 def _reload_music():
     for gid in guild_mps.keys():
@@ -47,7 +51,10 @@ def get_music_player(ctx, message=None):
     return guild_mps[guild.id]
 
 async def play(ctx, query, message=None):
-    await get_music_player(ctx, message).play(ctx, query, message=message)
+    if query.find("spotify") != -1:
+        await get_music_player(ctx, message).play_spotify(ctx, query, message=message)
+    else:
+        await get_music_player(ctx, message).play(ctx, query, message=message)
 
 
 async def pause(ctx, message=None):
@@ -132,3 +139,20 @@ async def destroy_player(gid):
     if gid not in guild_cache: guild_cache[gid] = {}
     guild_cache[gid]["mp_cookies"] = [mp.looped, mp.shuffled]
     await mp.abandon()
+
+async def reconstruct_players(restart_list):
+    for key in restart_list:
+        mp = music.MusicPlayer.from_restart(builtins.client, key, restart_list[key])
+        mp.persistent_message = await music.MusicPlayer.get_persistent_message(builtins.client.get_guild(key))
+        [await q[2].validate() for q in mp.queue]
+        [await q[2].validate() for q in mp.history]
+        guild_mps[key] = mp
+        await mp.check_song()
+
+def dump_mps():
+    t = {}
+    for key in guild_mps.keys():
+        t[key] = guild_mps[key].pickle_dict()
+    s = Stasis(name="MusicPlayerMemory")
+    s.store(t)
+

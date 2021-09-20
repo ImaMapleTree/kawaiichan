@@ -8,6 +8,7 @@ import time
 import random
 
 import utils
+import spotify
 
 youtube_dl.utils.bug_reports_message = lambda: ''
 
@@ -60,6 +61,25 @@ class PseudoContext:
             return self.voice_client
         return self.voice_client
 
+class RestartContext:
+    def __init__(self, client: discord.Client, guild_id, text_channel_id, voice_channel_id):
+        self.client = client
+        self.guild : discord.Guild = client.get_guild(guild_id)
+        self.channel : discord.TextChannel = self.guild.get_channel(text_channel_id)
+        self.voice_channel : discord.VoiceChannel = self.guild.get_channel(voice_channel_id)
+        self.voice_client = self.guild.voice_client
+
+    async def send(self, *args, **kwargs):
+        return await self.channel.send(*args, **kwargs)
+
+    async def validate(self):
+        if not self.voice_client:
+            if self.client.get_guild(self.channel.guild.id).voice_client:
+                self.voice_client = self.client.get_guild(self.channel.guild.id).voice_client
+            else:
+                self.voice_client = await self.voice_channel.connect()
+        return self.voice_client
+
 
 class MusicList(list):
     def __init__(self, callback=None, *args, **kwargs):
@@ -104,6 +124,19 @@ class MusicPlayer:
         mp.current_embed = mp_dict["embed"]
         return mp
 
+    @classmethod
+    def from_restart(cls, client, guild_id, re_dict):
+        mp = cls(client, re_dict["looping"], re_dict["shuffling"], re_dict["preferences"])
+        qq = re_dict["queue"]
+        mp.queue = collections.deque([[q[0], q[1], RestartContext(client, guild_id, q[2][0], q[2][1])] for q in qq])
+        qq = re_dict["history"]
+        mp.history = collections.deque([[q[0], q[1], RestartContext(client, guild_id, q[2][0], q[2][1])] for q in qq])
+        mp.paused = re_dict["paused"]
+        mp.current_embed = re_dict["embed"]
+
+        return mp
+
+
     async def _ctx_wrapper(self, ctx, message):
         if not ctx and message:
             ctx = PseudoContext(message)
@@ -121,7 +154,8 @@ class MusicPlayer:
             await self.persistent_message.edit(embed=self.current_embed)
         except:
             pass
-        song_container[2].voice_client.play(song_container[0].prepare(), after=lambda x: self._end_song(self.persistent_message, self._reconstruct(song_container)))
+        if not song_container[2].voice_client: self._end_song(self.persistent_message, self._reconstruct(song_container))
+        else: song_container[2].voice_client.play(song_container[0].prepare(), after=lambda x: self._end_song(self.persistent_message, self._reconstruct(song_container)))
 
     @staticmethod
     def _reconstruct(song_container):
@@ -142,7 +176,7 @@ class MusicPlayer:
         embed.set_footer(text=f"Looping: {self.looped} | Shuffling: {self.shuffled}", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
         return embed
 
-    async def play(self, ctx, query, message=None):
+    async def play(self, ctx, query, message=None, initialize=True):
         ctx = await self._ctx_wrapper(ctx, message)
         async for message in self.get_music_room(ctx).history():
             if not message.content.startswith("**__Queue List__:**"):
@@ -150,7 +184,7 @@ class MusicPlayer:
             else:
                 self.persistent_message = message
 
-        player = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume)
+        player = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume, initialize=initialize)
         self.queue.append([player, self.get_context(player), ctx])
         await self.check_song(ctx)
         if player.others is not None:
@@ -162,6 +196,13 @@ class MusicPlayer:
                 if i % chunk_size == 0: await self.update_queue_info()
             await self.update_queue_info()
 
+    async def play_spotify(self, ctx, query, message=None):
+        spl = spotify.smart_parse(query)
+        await self.play(ctx, spl.pop(0), message)
+
+        for song in spl:
+            await self.play(ctx, song, message, initialize=False)
+
     # TODO: When playing big playlists cache the data from player.others and have fake entries that get resolved on queue
 
     async def abandon(self):
@@ -172,7 +213,7 @@ class MusicPlayer:
         await self.persistent_message.guild.voice_client.disconnect()
 
 
-    async def check_song(self, ctx=None, message=None):
+    async def check_song(self, message=None):
         if message and len(self.queue) == 0:
             no_embed = self._set_status(self.default_embed)
             await message.edit(embed=no_embed)
@@ -203,17 +244,25 @@ class MusicPlayer:
         if self.current_embed:
             await self.persistent_message.edit(embed=self._set_status(self.current_embed))
 
-    def memory_dict(self):
+    def memory_dict(self, exclude=[]):
         memory = {}
-        memory["client"] = self.client
-        memory["looping"] = self.looped
-        memory["shuffling"] = self.shuffled
-        memory["queue"] = self.queue
-        memory["history"] = self.history
-        memory["p_message"] = self.persistent_message
-        memory["embed"] = self.current_embed
-        memory["paused"] = self.paused
-        memory["preferences"] = self.preferences
+        if "client" not in exclude: memory["client"] = self.client
+        if "looping" not in exclude: memory["looping"] = self.looped
+        if "shuffling" not in exclude: memory["shuffling"] = self.shuffled
+        if "queue" not in exclude: memory["queue"] = self.queue
+        if "history" not in exclude: memory["history"] = self.history
+        if "p_message" not in exclude: memory["p_message"] = self.persistent_message
+        if "embed" not in exclude: memory["embed"] = self.current_embed
+        if "paused" not in exclude: memory["paused"] = self.paused
+        if "preferences" not in exclude: memory["preferences"] = self.preferences
+        return memory
+
+    def pickle_dict(self):
+        memory = self.memory_dict(exclude=["client", "p_message"])
+        memory["queue"] = [[ImitationSource(source[0].data), source[1], [source[2].channel.id, source[2].voice_client.channel.id]] for source in self.queue]
+        memory["history"] = [
+            [ImitationSource(source[0].data), source[1], [source[2].channel.id, source[2].voice_client.channel.id]] for
+            source in self.history]
         return memory
 
 
@@ -252,6 +301,18 @@ class MusicPlayer:
     async def volume(self, ctx, message=None, volume=1):
         self._player_volume = volume
         ctx.voice_client.volume = volume
+
+    @staticmethod
+    async def get_persistent_message(guild):
+        channels = [channel for channel in guild.channels if channel.name == "song-requests"]
+        channel = channels[0] if channels else []
+
+        async for message in channel.history():
+            if not message.content.startswith("**__Queue List__:**"):
+                await message.delete()
+            else:
+                persistent_message = message
+        return persistent_message
 
     @staticmethod
     def get_music_room(ctx):
@@ -308,7 +369,10 @@ class MusicPlayer:
 
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5, others=None, filename=None):
-        super().__init__(source, volume)
+        self.initialized = False
+        if source is not None:
+            super().__init__(source, volume)
+            self.initialized = True
 
         self.data = data
 
@@ -317,9 +381,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
         self.others = others
         self.filename = filename
+        self.volume = volume
 
     @classmethod
-    async def from_query(cls, url, *, loop=None, stream=True, volume=0.5):
+    async def from_query(cls, url, *, loop=None, stream=True, volume=0.5, initialize=True):
         loop = loop or asyncio.get_event_loop()
         ytdl.cache.remove()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
@@ -332,8 +397,11 @@ class YTDLSource(discord.PCMVolumeTransformer):
         else:
             subdata = data
         filename = subdata['formats'][0]['url'] if stream else ytdl.prepare_filename(subdata)
+        if not initialize:
+            return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
         return cls(discord.FFmpegPCMAudio(filename, before_options=beforeArgs, **ffmpeg_options), data=subdata,
                    volume=volume, others=other_data, filename=filename)
+
 
     @classmethod
     def from_subdata(cls, data, stream=True, volume=0.5):
@@ -345,13 +413,20 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return YTDLSource(discord.FFmpegPCMAudio(self.filename, before_options=beforeArgs, **ffmpeg_options), data=self.data, volume=self.volume, filename=self.filename)
 
     def prepare(self):
+        if not self.initialized:
+            return YTDLSource.from_subdata(data=self.data, stream=True, volume=self.volume)
         return self
+
+    def cleanup(self, *args, **kwargs):
+        try: super().cleanup()
+        except AttributeError: pass
 
 class ImitationSource():
     def __init__(self, data, stream=True, volume=0.5):
         self.data = data
         self.stream = stream
         self.volume = volume
+        self.url = None
 
     def prepare(self):
         return YTDLSource.from_subdata(self.data, stream=self.stream, volume=self.volume)
