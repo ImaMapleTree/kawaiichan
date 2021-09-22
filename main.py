@@ -132,7 +132,7 @@ async def restart(ctx):
     backend.dump_mps()
     #print([sys.executable] + [os.path.abspath(os.path.join(os.getcwd(), sys.argv[0]))])
     #os.execv(sys.executable, [sys.executable] + [os.path.abspath(os.path.join(os.getcwd(), sys.argv[0]))])
-    os.execv(sys.executable, sys.argv[0])
+    os.execv(sys.executable, [sys.argv[0]])
 
 @client.command(pass_context=True)
 async def whatis(ctx, variable, do_repr=False):
