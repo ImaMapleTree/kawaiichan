@@ -92,7 +92,8 @@ class Stasis(metaclass=StasisMetaclass):
 
     def has_memory(self):
         if not self._shared_memory:
-            self._shared_memory = shared_memory.SharedMemory(name=self.name)
+            try: self._shared_memory = shared_memory.SharedMemory(name=self.name)
+            except Exception as e: print(e)
         return True
 
 
