@@ -49,6 +49,7 @@ class PersistentProcess(Process):
         self.queue.put(len(self.data))
         self.queue.put(os.getpid())
         while True:
+            print(self.shm_name)
             self.shm.buf[0:len(self.data)] = self.data
             time.sleep(self.wait_time)
             if not self.queue.empty():
