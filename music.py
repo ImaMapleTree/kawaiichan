@@ -23,7 +23,9 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'auto',
     'geo_bypass_country': 'US',
-    'cachedir': False
+    'cachedir': False,
+    "username": "kawaiichan@gmail.com",
+    "password": "shinxshinx6820"
 }
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"

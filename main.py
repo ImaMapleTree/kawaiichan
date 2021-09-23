@@ -1,16 +1,13 @@
 import asyncio
 import os
-import pickle
 
 import discord
-import psutil
 from discord.ext import commands
 import hookcord
 import utils
 import builtins
 
 import sys
-import subprocess
 
 from datastasis import Stasis
 
