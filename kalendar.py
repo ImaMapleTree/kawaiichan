@@ -32,7 +32,6 @@ def schedule(task, date, ctime, user_id):
 def get_plans(month, year, day, ctime):
     ydict = user_calendar.get(f'{month}/{year}', {})
     daydict = ydict.get(str(day), {})
-    print(daydict)
     plans = {}
     [plans.setdefault(user_id, daydict[user_id][ctime]) for user_id in daydict.keys() if ctime in daydict[user_id]]
     return plans
