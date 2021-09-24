@@ -11,7 +11,7 @@ user_calendar = utils.JOpen("cache/calendar.json", "r+")
 STRING_MONTHS = {"1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June", "7": "July",
     "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"}
 
-roboto_path = os.path.join(os.getcwd(), 'assets/Roboto/Roboto-medium.ttf')
+roboto_path = os.path.join(os.getcwd(), 'assets/Roboto/Roboto-Medium.ttf')
 print(roboto_path)
 roboto_font = ImageFont.truetype(roboto_path, 40)
 activity_font = ImageFont.truetype(roboto_path, 20)
