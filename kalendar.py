@@ -1,5 +1,6 @@
 import calendar
 import math
+import os
 
 from PIL import ImageFont, Image, ImageDraw
 
@@ -9,6 +10,12 @@ user_calendar = utils.JOpen("cache/calendar.json", "r+")
 
 STRING_MONTHS = {"1": "January", "2": "February", "3": "March", "4": "April", "5": "May", "6": "June", "7": "July",
     "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"}
+
+roboto_path = os.path.join(os.getcwd(), 'assets/Robot/Roboto-medium.ttf')
+roboto_font = ImageFont.truetype(roboto_path, 40)
+activity_font = ImageFont.truetype(roboto_path, 20)
+month_path = os.path.join(os.getcwd(), 'assets/Dancing_Script/DancingScript-VariableFont_wght.ttf')
+month_font = ImageFont.truetype(month_path, 140)
 
 def schedule(task, date, ctime, user_id):
     user_id = str(user_id)
@@ -37,11 +44,9 @@ def get_plans(month, year, day, ctime):
     return plans
 
 def display(month, year, user_id):
-    img = Image.open("assets/calendar.png").convert("RGBA")
+    img = Image.open(os.path.join(os.getcwd(), "assets/calendar.png")).convert("RGBA")
     draw = ImageDraw.Draw(img)
-    font = ImageFont.truetype(r'assets/Roboto/Roboto-medium.ttf', 40)
-    activity_font = ImageFont.truetype(r'assets/Roboto/Roboto-medium.ttf', 20)
-    month_font = ImageFont.truetype(r'assets/Dancing_Script/DancingScript-VariableFont_wght.ttf', 140)
+
     user_id = str(user_id)
     cal = calendar.Calendar()
     xs = 0
@@ -60,7 +65,7 @@ def display(month, year, user_id):
         comp_x = 0 if a >= 10 else 12
         date = str(i) if i != 0 else ''
         comp_x = 16 if i >= 6 and i <= 9 else comp_x
-        draw.text((188 + xs + comp_x, y), date, (0, 0, 0), font=font)
+        draw.text((188 + xs + comp_x, y), date, (0, 0, 0), font=roboto_font)
         if str(i) in user_days:
             tasks = []
             ttasks = ydict[str(i)][user_id].values()
@@ -71,5 +76,5 @@ def display(month, year, user_id):
         if a % 7 == 0:
             xs = 0
             y += 190
-    img.save("assets/temp_calendar.png")
+    img.save(os.path.join(os.getcwd(), "assets/temp_calendar.png"))
     return True

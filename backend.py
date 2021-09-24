@@ -57,7 +57,7 @@ def get_music_player(ctx, message=None):
 
 async def calendar(ctx, month, year):
     kalendar.display(month, year, ctx.message.author.id)
-    await ctx.message.author.send(file=discord.File("assets/temp_calendar.png"))
+    await ctx.message.author.send(file=discord.File(os.path.join(os.getcwd(), "assets/temp_calendar.png")))
 
 async def check_calendar():
     now = datetime.now()
@@ -78,6 +78,7 @@ async def plan(ctx, date, task, ctime):
         ctime = cht + now.strftime(":%M%p")
     ctime = ctime.lower()
     kalendar.schedule(task, date, ctime, ctx.message.author.id)
+    await ctx.send(f"**{task}** scheduled for **{date}** at **{ctime}**")
 
 async def play(ctx, query, message=None):
     if query.find("spotify") != -1:
