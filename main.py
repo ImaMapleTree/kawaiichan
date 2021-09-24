@@ -1,4 +1,5 @@
 import asyncio
+import calendar
 import os
 
 import discord
@@ -132,6 +133,23 @@ async def restart(ctx):
     os.execv(sys.executable, [sys.argv[0]])
 
 @client.command(pass_context=True)
+async def plan(ctx, date, *content):
+    content = " ".join(content)
+    ctime = None if content.find("@") == -1 else content[content.find("@ ")+2:]
+    await backend.plan(ctx, date, content.split(" @")[0], ctime)
+
+@client.command(pass_context=True)
+async def calendar(ctx, date):
+    mdy = date.split("/")
+    if len(mdy) == 3:
+        month = mdy[0]
+        year = mdy[2]
+    else:
+        month= mdy[0]
+        year = mdy[1]
+    await backend.calendar(ctx, month, year)
+
+@client.command(pass_context=True)
 async def whatis(ctx, variable, do_repr=False):
     variables = globals().copy()
     variables.update(locals())
@@ -165,6 +183,7 @@ async def minutetick():
             #os.execv(sys.executable, ['python'] + [os.path.abspath(sys.argv[0])])
         await backend.expire_players()
         await backend.mark_alone()
+        await backend.check_calendar()
         await asyncio.sleep(60)
         uptime += 1
 

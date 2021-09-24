@@ -2,7 +2,11 @@ import asyncio
 import pickle
 import time
 import os
+from datetime import datetime
 
+import discord
+
+import kalendar
 import music
 import builtins
 
@@ -49,6 +53,31 @@ def get_music_player(ctx, message=None):
             pref = guild_settings.get(str(guild.id)).get("preferences", {})
         guild_mps[guild.id] = music.MusicPlayer(builtins.client, looped=looped, shuffled=shuffled, preferences=pref)
     return guild_mps[guild.id]
+
+
+async def calendar(ctx, month, year):
+    kalendar.display(month, year, ctx.message.author.id)
+    await ctx.message.author.send(file=discord.File("assets/temp_calendar.png"))
+
+async def check_calendar():
+    now = datetime.now()
+    cht = now.strftime("%H")
+    if cht[0] == "0": cht = cht[1:]
+    ctime = cht + now.strftime(":%M%p").lower()
+    tasks = kalendar.get_plans(now.month, now.year, now.day, ctime)
+    for uid in tasks.keys():
+        user = await builtins.client.fetch_user(int(uid))
+        for task in tasks[uid]:
+            await user.send(task)
+
+async def plan(ctx, date, task, ctime):
+    if ctime == None:
+        now = datetime.now()
+        cht = now.strftime("%H")
+        if cht[0] == "0": cht = cht[1:]
+        ctime = cht + now.strftime(":%M%p")
+    ctime = ctime.lower()
+    kalendar.schedule(task, date, ctime, ctx.message.author.id)
 
 async def play(ctx, query, message=None):
     if query.find("spotify") != -1:
