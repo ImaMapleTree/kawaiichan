@@ -64,6 +64,7 @@ async def check_calendar():
     cht = now.strftime("%H")
     if cht[0] == "0": cht = cht[1:]
     ctime = cht + now.strftime(":%M%p").lower()
+    print(now.month, now.year, now.day, ctime)
     tasks = kalendar.get_plans(now.month, now.year, now.day, ctime)
     for uid in tasks.keys():
         user = await builtins.client.fetch_user(int(uid))
