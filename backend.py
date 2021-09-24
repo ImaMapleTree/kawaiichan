@@ -4,7 +4,7 @@ import time
 import os
 from datetime import datetime
 from pytz import timezone
-tz = timezone('EST')
+tz = timezone('US/Eastern')
 
 import discord
 
@@ -61,7 +61,7 @@ async def calendar(ctx, month, year):
     await ctx.message.author.send(file=discord.File(os.path.join(os.getcwd(), "assets/temp_calendar.png")))
 
 async def check_calendar():
-    now = datetime.now(tz)
+    now = datetime.now(tz=tz)
     cht = now.strftime("%I")
     if cht[0] == "0": cht = cht[1:]
     ctime = cht + now.strftime(":%M%p").lower()
@@ -74,7 +74,7 @@ async def check_calendar():
 
 async def plan(ctx, date, task, ctime):
     if ctime == None:
-        now = datetime.now(tz)
+        now = datetime.now(tz=tz)
         cht = now.strftime("%I")
         if cht[0] == "0": cht = cht[1:]
         ctime = cht + now.strftime(":%M%p")
