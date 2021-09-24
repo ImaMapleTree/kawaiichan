@@ -3,6 +3,8 @@ import pickle
 import time
 import os
 from datetime import datetime
+from pytz import timezone
+tz = timezone('EST')
 
 import discord
 
@@ -14,8 +16,7 @@ import random
 import importlib
 
 import utils
-from multiprocessing.shared_memory import SharedMemory
-import multiprocessing
+
 
 from datastasis import Stasis
 
@@ -60,7 +61,7 @@ async def calendar(ctx, month, year):
     await ctx.message.author.send(file=discord.File(os.path.join(os.getcwd(), "assets/temp_calendar.png")))
 
 async def check_calendar():
-    now = datetime.now()
+    now = datetime.now(tz)
     cht = now.strftime("%I")
     if cht[0] == "0": cht = cht[1:]
     ctime = cht + now.strftime(":%M%p").lower()
@@ -73,7 +74,7 @@ async def check_calendar():
 
 async def plan(ctx, date, task, ctime):
     if ctime == None:
-        now = datetime.now()
+        now = datetime.now(tz)
         cht = now.strftime("%I")
         if cht[0] == "0": cht = cht[1:]
         ctime = cht + now.strftime(":%M%p")
