@@ -12,6 +12,7 @@ STRING_MONTHS = {"1": "January", "2": "February", "3": "March", "4": "April", "5
     "8": "August", "9": "September", "10": "October", "11": "November", "12": "December"}
 
 roboto_path = os.path.join(os.getcwd(), 'assets/Robot/Roboto-medium.ttf')
+print(roboto_path)
 roboto_font = ImageFont.truetype(roboto_path, 40)
 activity_font = ImageFont.truetype(roboto_path, 20)
 month_path = os.path.join(os.getcwd(), 'assets/Dancing_Script/DancingScript-VariableFont_wght.ttf')
