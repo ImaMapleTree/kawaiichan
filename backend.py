@@ -61,7 +61,7 @@ async def calendar(ctx, month, year):
 
 async def check_calendar():
     now = datetime.now()
-    cht = now.strftime("%H")
+    cht = now.strftime("%I")
     if cht[0] == "0": cht = cht[1:]
     ctime = cht + now.strftime(":%M%p").lower()
     print(now.month, now.year, now.day, ctime)
@@ -74,7 +74,7 @@ async def check_calendar():
 async def plan(ctx, date, task, ctime):
     if ctime == None:
         now = datetime.now()
-        cht = now.strftime("%H")
+        cht = now.strftime("%I")
         if cht[0] == "0": cht = cht[1:]
         ctime = cht + now.strftime(":%M%p")
     ctime = ctime.lower()
