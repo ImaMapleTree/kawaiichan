@@ -24,7 +24,6 @@ class Playlist():
 
         remaining = self.tracks.get("total")
         for i in range(math.ceil(remaining/100)):
-            #print(sp.playlist_items(self.id, offset=100+(i*100), limit=100))
             self.tracks["items"] += sp.playlist_items(self.id, offset=100+(i*100), limit=100)["items"]
 
         self.songs = self.get_song_names()

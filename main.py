@@ -1,6 +1,9 @@
 import asyncio
-import calendar
 import os
+from datetime import datetime, timedelta, date
+from pytz import timezone
+tz = timezone('US/Eastern')
+
 
 import discord
 from discord.ext import commands
@@ -133,14 +136,34 @@ async def restart(ctx):
     os.execv(sys.executable, [sys.argv[0]])
 
 @client.command(pass_context=True)
-async def plan(ctx, date, *content):
+async def plan(ctx, sdate, *content):
+    days = 1
+    tdate = sdate.replace("-", "/")
+    ldate : list = tdate.split("/")
+    if len(ldate) == 2:
+        ldate.append("2021")
+
+    if len(ldate) > 3:
+        if len(ldate) == 4:
+            ldate.insert(2, "2021")
+            ldate.append("2021")
+        d1 = date(int(ldate[2]), int(ldate[0]), int(ldate[1]))
+        d2 = date(int(ldate[5]), int(ldate[3]), int(ldate[4]))
+        delta = d2 - d1
+        days = delta.days + 1
+    cdate = date(int(ldate[2]), int(ldate[0]), int(ldate[1]))
     content = " ".join(content)
-    ctime = None if content.find("@") == -1 else content[content.find("@ ")+2:]
-    await backend.plan(ctx, date, content.split(" @")[0], ctime)
+    for i in range(days):
+        ctime = None if content.find("@") == -1 else content[content.find("@ ")+2:]
+        ctime = await backend.plan(ctx, cdate + timedelta(days=i), content.split(" @")[0], ctime)
+    await ctx.send(f"**{content.split(' @')[0]}** scheduled for **{sdate}** at **{ctime}**")
 
 @client.command(pass_context=True)
-async def calendar(ctx, date):
-    mdy = date.split("/")
+async def calendar(ctx, date=None):
+    if not date:
+        now = datetime.now(tz=tz)
+        mdy = [str(now.month), str(now.day), str(now.year)]
+    else: mdy = date.split("/")
     if len(mdy) == 3:
         month = mdy[0]
         year = mdy[2]
@@ -189,5 +212,5 @@ async def minutetick():
 
 
 if __name__ == "__main__":
-    client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
-    #client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)
+    #client.run('MjAwNDgwMTg1MDQ3MzE4NTI4.V33luA.HHJucLwp1FAqiXxX-4-hO3TiabQ') #Main bot
+    client.run('MjAwOTkyNTc3MTc5MjIyMDE2.V3_C7A.4d4DaKOALJDo4HqANVe6PJDkQl8')  # Test bot (Ezreal)

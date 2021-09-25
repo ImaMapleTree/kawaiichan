@@ -1,6 +1,9 @@
 import calendar
 import math
 import os
+from datetime import datetime
+from pytz import timezone
+tz = timezone('US/Eastern')
 
 from PIL import ImageFont, Image, ImageDraw
 
@@ -20,14 +23,14 @@ month_font = ImageFont.truetype(month_path, 140)
 
 def schedule(task, date, ctime, user_id):
     user_id = str(user_id)
-    mdy = date.split("/")
-    ym = mdy[0] + "/" + mdy[2]
+    ym = str(date.month) + "/" + str(date.year)
+    day = str(date.day)
     if ym not in user_calendar:
         user_calendar[ym] = {}
     ydict = user_calendar[ym]
-    if mdy[1] not in ydict:
-        ydict[mdy[1]] = {}
-    daydict = ydict[mdy[1]]
+    if day not in ydict:
+        ydict[day] = {}
+    daydict = ydict[day]
     if user_id not in daydict:
         daydict[user_id] = {}
     current = daydict[user_id]
@@ -45,6 +48,9 @@ def get_plans(month, year, day, ctime):
     return plans
 
 def display(month, year, user_id):
+
+    day = int(datetime.now(tz=tz).day)
+
     img = Image.open(os.path.join(os.getcwd(), "assets/calendar.png")).convert("RGBA")
     draw = ImageDraw.Draw(img)
 
@@ -66,12 +72,14 @@ def display(month, year, user_id):
         comp_x = 0 if a >= 10 else 12
         date = str(i) if i != 0 else ''
         comp_x = 16 if i >= 6 and i <= 9 else comp_x
-        draw.text((188 + xs + comp_x, y), date, (0, 0, 0), font=roboto_font)
+        color = (0, 0, 0) if i != day else (255, 87, 51)
+        draw.text((188 + xs + comp_x, y), date, color, font=roboto_font)
+        color = (14, 218, 14) if i >= day else (164, 0, 0)
         if str(i) in user_days:
             tasks = []
             ttasks = ydict[str(i)][user_id].values()
             for t in ttasks: tasks += t
-            draw.text((188 + xs + comp_x, y + 40), "\n".join(tasks), (0, 0, 0), font=activity_font)
+            draw.text((188 + xs + comp_x, y + 40), "\n".join(tasks), color, font=activity_font)
         a += 1
         xs += 240
         if a % 7 == 0:

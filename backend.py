@@ -65,7 +65,6 @@ async def check_calendar():
     cht = now.strftime("%I")
     if cht[0] == "0": cht = cht[1:]
     ctime = cht + now.strftime(":%M%p").lower()
-    print(now.month, now.year, now.day, ctime)
     tasks = kalendar.get_plans(now.month, now.year, now.day, ctime)
     for uid in tasks.keys():
         user = await builtins.client.fetch_user(int(uid))
@@ -80,7 +79,7 @@ async def plan(ctx, date, task, ctime):
         ctime = cht + now.strftime(":%M%p")
     ctime = ctime.lower()
     kalendar.schedule(task, date, ctime, ctx.message.author.id)
-    await ctx.send(f"**{task}** scheduled for **{date}** at **{ctime}**")
+    return ctime
 
 async def play(ctx, query, message=None):
     if query.find("spotify") != -1:
