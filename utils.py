@@ -46,6 +46,20 @@ async def get_members_in_call(client, guild):
         return guild.voice_client.channel.members
     return [await guild.fetch_member(member_id) for member_id in guild.voice_client.channel.voice_states.keys()]
 
+def parse_date_string(string_date):
+    days = 1
+    split_date = string_date.replace(" - ", "/").replace("-", "/").split("/")
+    if len(split_date) == 4:
+        split_date.insert(2, "2021")
+    if len(split_date) == 2 or len(split_date) == 5:
+        split_date.append("2021")
+    if len(split_date) > 3:
+        d1 = date(int(split_date[2]), int(split_date[0]), int(split_date[1]))
+        d2 = date(int(split_date[5]), int(split_date[3]), int(split_date[4]))
+        delta = d2 - d1
+        days = delta.days + 1
+    pass_date = date(int(split_date[2]), int(split_date[0]), int(split_date[1]))
+    return pass_date, days
 
 
 def shorten_source(source):
@@ -55,18 +69,52 @@ def shorten_source(source):
     return source[i + 1:d]
 
 
-def JOpen(location, mode, savee=None):
+def JOpen(location, mode, savee=None, forced=False):
     if mode == 'r' or mode == 'r+':
-        if path.exists(location) != True: return (None)  # Checks if path exists, if not returns false.
+        if not path.exists(location) and not forced: return (None)  # Checks if path exists, if not returns false.
+        elif not path.exists(location):
+            return ForceDict()
         TOP = codecs.open(location, "r", "utf-8")
         quick_json = json.load(TOP)
         TOP.close()
+        if forced:
+            return ForceDict(quick_json)
         return (quick_json)
     elif mode == 'w' or mode == 'w+':
         with open(location, mode) as TOP:
             json.dump(savee, TOP, indent=3)
             TOP.close()
-        return ()
+        return()
+
+class ForceDict(dict):
+    def __init__(self, *args, **kwargs):
+        self.path = kwargs.pop("path") if "path" in kwargs else None
+        super(self, dict).__init__(*args, **kwargs)
+
+    def __getitem__(self, key):
+        try: return super().__getitem__(key)
+        except KeyError:
+            self[key] = None
+        return None
+
+    def get(self, key, default=None):
+        try: return super().__getitem__(key)
+        except KeyError:
+            self[key] = default
+        return default
+
+    def save(self):
+        if self.path:
+            JOpen(self.path, "w+", self)
+
+class SaveDict(dict):
+    def __init__(self, *args, **kwargs):
+        self.path = kwargs.pop("path") if "path" in kwargs else None
+        super(self, dict).__init__(*args, **kwargs)
+
+    def save(self):
+        if self.path:
+            JOpen(self.path, "w+", self)
 
 
 class UUID:

@@ -1,0 +1,13 @@
+name: add
+description: Allows user to assign themselves the given role
+[options]
+	{role}
+		name: role
+		description: Role for assigning
+		option_type: 8
+		required: true
+	{emoji}
+		name: emoji
+		description: Reaction for the role. (CAN be server emojis). If not specified, will use a random emoji.
+		option_type: 3
+		required: false

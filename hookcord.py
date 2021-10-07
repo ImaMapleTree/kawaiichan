@@ -1,4 +1,3 @@
-import discord
 from discord.ext.commands import core, bot, errors
 import discord_slash
 

@@ -1,0 +1,13 @@
+name: plan
+description: Schedule a reminder for an upcoming event.
+[options]
+	{option1}
+		name: date
+		description: Date or date range for the reminder (ex: 9/25 or 9/25/2021 or 9/25-10/25)
+		option_type: 3
+		required: True
+	{option2}
+		name: content
+		description: Reminder, if you want to specify a time add "@ TIME" (ex: M's Birthday @ 9:00PM)
+		option_type: 3
+		required: True

@@ -2,6 +2,8 @@ import os
 import pickle
 from multiprocessing import shared_memory, Process, Queue
 import time
+from multiprocessing.shared_memory import SharedMemory
+
 import psutil
 
 
@@ -24,24 +26,27 @@ class NoNameDeclaredError(Exception):
 
 class PersistentProcess(Process):
     def __init__(self, data, queue: Queue, *args, **kwargs):
+        self.raw_data = {"data": None, "pid": None}
+        self.shm = None
         self.shm_name = kwargs.pop("name", None)
         self.wait_time = kwargs.pop("wait_time", 5)
         super(PersistentProcess, self).__init__(*args, **kwargs)
         self.data = data
         self.queue = queue
 
-
     def run(self):
         self.raw_data = {"data": self.data, "pid": os.getpid()}
         self.data = pickle.dumps(self.raw_data)
-        try: self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
+        try:
+            self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
         except OSError:
             self.shm = shared_memory.SharedMemory(name=self.shm_name)
             self.shm.close()
             self.shm.unlink()
             # Attempts to use the same shm_name again after unlinking the previous one,
             # if this doesn't work uses new name in place.
-            try: self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
+            try:
+                self.shm = shared_memory.SharedMemory(name=self.shm_name, create=True, size=len(self.data))
             except OSError:
                 self.shm = shared_memory.SharedMemory(create=True, size=len(self.data))
         self.shm_name = self.shm.name
@@ -67,6 +72,8 @@ class StasisMetaclass(type):
 
 
 class Stasis(metaclass=StasisMetaclass):
+    _shared_memory: SharedMemory
+
     def __init__(self, *, name=None, wait_time=5):
         self.name = name
         self._stasis_thread = None
@@ -75,7 +82,7 @@ class Stasis(metaclass=StasisMetaclass):
         self.wait_time = wait_time
         self.max_bytes = None
         self._byte_selection = None
-        self._shared_memory: shared_memory.SharedMemory = None
+        self._shared_memory = None
 
     def access_raw(self):
         if not self.name:
@@ -93,10 +100,12 @@ class Stasis(metaclass=StasisMetaclass):
 
     def has_memory(self):
         if not self._shared_memory:
-            try: self._shared_memory = shared_memory.SharedMemory(name=self.name)
-            except Exception as e: print(e); return False
+            try:
+                self._shared_memory = shared_memory.SharedMemory(name=self.name)
+            except Exception as e:
+                print(e)
+                return False
         return True
-
 
     def store(self, data):
         if self._stasis_thread:
@@ -105,12 +114,14 @@ class Stasis(metaclass=StasisMetaclass):
 
         if self._shared_memory:
             self._shared_memory.close()
-            try: self._shared_memory.unlink()
-            except: pass
+            try:
+                self._shared_memory.unlink()
+            except:
+                pass
 
         self._stasis_queue = Queue()
-        self._stasis_thread = PersistentProcess(data, self._stasis_queue, name=self.name,
-                                           wait_time=self.wait_time, daemon=True)
+        self._stasis_thread = PersistentProcess(data, self._stasis_queue, name=self.name, wait_time=self.wait_time,
+                                                daemon=True)
 
         self._stasis_thread.start()
         self.name = self._stasis_queue.get()
@@ -127,8 +138,10 @@ class Stasis(metaclass=StasisMetaclass):
         p.terminate()
         if self._shared_memory:
             self._shared_memory.close()
-            try: self._shared_memory.unlink()
-            except: pass
+            try:
+                self._shared_memory.unlink()
+            except:
+                pass
         if self._stasis_thread:
             self._stasis_thread.terminate()
             self._stasis_queue.close()

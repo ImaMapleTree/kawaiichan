@@ -1,8 +1,8 @@
-import asyncio
-import pickle
 import time
 import os
 from datetime import datetime
+
+import psutil
 from pytz import timezone
 tz = timezone('US/Eastern')
 
@@ -186,4 +186,29 @@ def dump_mps():
         t[key] = guild_mps[key].pickle_dict()
     s = Stasis(name="MusicPlayerMemory")
     s.store(t)
+
+def get_status(uptime):
+    embed = discord.Embed(tile="Status", description=f"**Uptime: {uptime / 60} minutes**", color=0xfc8403)
+    embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/895721446054166599/895721488777347132/kawii-chan.png")
+    embed.add_field(name="Music Players", value=len(guild_mps), inline=False)
+    ctp = psutil.cpu_times_percent(interval=1)
+    embed.add_field(name="Current CPU Usage",
+                    value=f"**Processes:** {ctp.user}% | **System:** {ctp.system}% | **Idle:** {ctp.idle}%  ", inline=False)
+    try:
+        loadavg = [f"**{x / psutil.cpu_count() * 100}%**" for x in psutil.getloadavg()]
+    except OSError:
+        loadavg = ["**N/A**", "**N/A**", "**N/A**"]
+    embed.add_field(name="CPU 1-Min", value=loadavg[0])
+    embed.add_field(name="CPU 5-Min", value=loadavg[1])
+    embed.add_field(name="CPU 15-Min", value=loadavg[2])
+
+    process = psutil.Process()
+    cp2 = process.cpu_times()
+    embed.add_field(name="Process CPU Usage",
+                    value=f"**Source:** {cp2.user}% | **System:** {cp2.system}%", inline=False)
+    pstatus = f"**State:** {process.status()} | **Started:** {datetime.fromtimestamp(process.create_time()).strftime('%B %d, %I:%M:%S%p')}"
+    embed.add_field(name="Process Status", value=pstatus, inline=False)
+    embed.add_field(name=f"Working Path", value=process.cwd(), inline=False)
+    embed.add_field(name=f"Python Path", value=process.exe(), inline=False)
+    return embed
 
