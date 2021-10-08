@@ -49,13 +49,17 @@ async def on_raw_reaction_add(payload):
     channel = await client.fetch_channel(payload.channel_id)
     message = await channel.fetch_message(payload.message_id)
     emoji = payload.emoji
-
     if payload.user_id == client.user.id: return
-    if channel.name != "song-requests": return
-    if message.author != client.user: return
 
+    if await backend.process_reaction(payload.member, message, emoji): return
+
+    if channel.name != "song-requests":
+        return
+    if message.author != client.user:
+        return
     valid_reaction = await utils.validate_reactions(message, emoji)
-    if valid_reaction is None: return
+    if valid_reaction is None:
+        return
 
     user = await client.fetch_user(payload.user_id)
     await valid_reaction.remove(user)
@@ -163,11 +167,25 @@ async def slash_plan(ctx, string_date, content):
         ctime = await backend.plan(ctx, pass_date + timedelta(days=i), content.split(" @")[0], ctime)
     await ctx.send(f"**{content.split(' @')[0]}** scheduled for **{string_date}** at **{ctime}**")
 
+@slash.subcommand(base="react", subcommand_group="message", **utils.command_generator("message_create"))
+async def slash_react_message_create(ctx, title=None, description=None):
+    status_message = await backend.create_react_message(ctx.channel, title, description)
+    await ctx.send(status_message, hidden=True)
+
+@slash.subcommand(base="react", subcommand_group="message", **utils.command_generator("message_delete"))
+async def slash_react_message_delete(ctx):
+    status_message = await backend.delete_react_message(ctx.channel)
+    await ctx.send(status_message, hidden=True)
 
 @slash.subcommand(base="react", subcommand_group="auto_role", **utils.command_generator("auto_role_add"))
-async def slash_react_role_add(ctx, role, emoji):
-    pass
+async def slash_react_role_add(ctx, role, emoji=None):
+    status_message = await backend.add_auto_role(ctx.channel, role, emoji)
+    await ctx.send(status_message, hidden=True)
 
+@slash.subcommand(base="react", subcommand_group="reaction", **utils.command_generator("emoji_remove"))
+async def slash_reaction_delete(ctx, emoji):
+    status_message = await backend.delete_reaction(ctx.channel, emoji)
+    await ctx.send(status_message, hidden=True)
 
 @client.command(pass_context=True)
 async def calendar(ctx, date=None):

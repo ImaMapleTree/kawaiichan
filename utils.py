@@ -40,6 +40,13 @@ async def validate_reactions(message, emoji):
         return [reaction for reaction in message.reactions if reaction.emoji == emoji.name][0]
     return None
 
+def validate_reaction(message, emoji):
+    try_reactions = [reaction for reaction in message.reactions if reaction.emoji == emoji.name]
+    if try_reactions == []:
+        try_reactions = [reaction for reaction in message.reactions if reaction.emoji == emoji]
+    valid_reaction = try_reactions[0] if len(try_reactions) >= 1 else None
+    return valid_reaction
+
 async def get_members_in_call(client, guild):
     if not guild.voice_client: return []
     if len(guild.voice_client.channel.members) >= len(guild.voice_client.channel.voice_states):
@@ -73,13 +80,13 @@ def JOpen(location, mode, savee=None, forced=False):
     if mode == 'r' or mode == 'r+':
         if not path.exists(location) and not forced: return (None)  # Checks if path exists, if not returns false.
         elif not path.exists(location):
-            return ForceDict()
+            return ForceDict(path=location)
         TOP = codecs.open(location, "r", "utf-8")
         quick_json = json.load(TOP)
         TOP.close()
         if forced:
-            return ForceDict(quick_json)
-        return (quick_json)
+            return ForceDict(quick_json, path=location)
+        return SaveDict(quick_json, path=location)
     elif mode == 'w' or mode == 'w+':
         with open(location, mode) as TOP:
             json.dump(savee, TOP, indent=3)
@@ -89,7 +96,7 @@ def JOpen(location, mode, savee=None, forced=False):
 class ForceDict(dict):
     def __init__(self, *args, **kwargs):
         self.path = kwargs.pop("path") if "path" in kwargs else None
-        super(self, dict).__init__(*args, **kwargs)
+        super(ForceDict, self).__init__(*args, **kwargs)
 
     def __getitem__(self, key):
         try: return super().__getitem__(key)
@@ -110,7 +117,7 @@ class ForceDict(dict):
 class SaveDict(dict):
     def __init__(self, *args, **kwargs):
         self.path = kwargs.pop("path") if "path" in kwargs else None
-        super(self, dict).__init__(*args, **kwargs)
+        super(SaveDict, self).__init__(*args, **kwargs)
 
     def save(self):
         if self.path:

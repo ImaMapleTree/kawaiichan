@@ -4,6 +4,9 @@ from datetime import datetime
 
 import psutil
 from pytz import timezone
+
+import utilities
+
 tz = timezone('US/Eastern')
 
 import discord
@@ -27,6 +30,12 @@ alone_list = []
 
 guild_settings_path = os.path.join(os.getcwd(), "guild_settings.json")
 guild_settings = builtins.guild_settings
+
+react_cache_path = os.path.join(os.getcwd(), "cache/react_cache.json")
+react_cache = utils.JOpen(react_cache_path, "r+", forced=True)
+react_cache.get("messages", [])
+react_cache.get("guilds", {})
+react_manager = utilities.ReactChan(builtins.client, react_cache)
 
 def _reload_music():
     for gid in guild_mps.keys():
@@ -55,6 +64,8 @@ def get_music_player(ctx, message=None):
         guild_mps[guild.id] = music.MusicPlayer(builtins.client, looped=looped, shuffled=shuffled, preferences=pref)
     return guild_mps[guild.id]
 
+async def add_auto_role(channel, role, emoji):
+    return await react_manager.add_auto_role(channel, role, emoji)
 
 async def calendar(ctx, month, year):
     kalendar.display(month, year, ctx.message.author.id)
@@ -70,6 +81,20 @@ async def check_calendar():
         user = await builtins.client.fetch_user(int(uid))
         for task in tasks[uid]:
             await user.send(task)
+
+async def create_react_message(channel, name, description):
+    return await react_manager.create_react_message(channel, name, description)
+
+async def delete_reaction(channel, emoji):
+    channel_object = react_manager.get_channel_object(channel.guild, channel)
+    if not channel_object: return "Reaction message not found."
+    message = channel_object.get("message")
+    if not message: return "Reaction message not found."
+    message = await channel.fetch_message(message)
+    return await react_manager.remove_reaction(channel, emoji)
+
+async def delete_react_message(channel):
+    return await react_manager.delete_react_message(channel)
 
 async def plan(ctx, date, task, ctime):
     if ctime == None:
@@ -91,6 +116,15 @@ async def play(ctx, query, message=None):
 async def pause(ctx, message=None):
     await get_music_player(ctx, message).pause(ctx, message)
 
+async def process_reaction(member, message, emoji):
+    if not react_manager.is_react_message(message): return False
+    reaction = utils.validate_reaction(message, emoji)
+    if not reaction: return False
+    try: await react_manager.process_raw_reaction(member, message, emoji)
+    except discord.errors.Forbidden: pass
+    user = await builtins.client.fetch_user(member.id)
+    await reaction.remove(user)
+    return True
 
 async def stop(ctx, message=None):
     await get_music_player(ctx, message).stop(ctx, message)
@@ -190,7 +224,7 @@ def dump_mps():
 def get_status(uptime):
     embed = discord.Embed(tile="Status", description=f"**Uptime: {uptime / 60} minutes**", color=0xfc8403)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/895721446054166599/895721488777347132/kawii-chan.png")
-    embed.add_field(name="Music Players", value=len(guild_mps), inline=False)
+    embed.add_field(name="Music Players", value=len(guild_mps.keys()), inline=False)
     ctp = psutil.cpu_times_percent(interval=1)
     embed.add_field(name="Current CPU Usage",
                     value=f"**Processes:** {ctp.user}% | **System:** {ctp.system}% | **Idle:** {ctp.idle}%  ", inline=False)

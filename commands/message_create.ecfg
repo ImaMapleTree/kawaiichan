@@ -1,0 +1,13 @@
+name: create
+description: Creates a react message.
+[options]
+	{title}
+		name: title
+		description: Title of the react message (embed), not required
+		option_type: 3
+		required: false
+	{description}
+		name: description
+		description: Description of the react message (embed), not required
+		option_type: 3
+		required: false

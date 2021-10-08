@@ -1,0 +1,8 @@
+name: remove
+description: Removes a reaction from a react message
+[options]
+	{emoji}
+		name: emoji
+		description: The emoji (reaction) to remove
+		option_type: 3
+		required: true
