@@ -222,7 +222,7 @@ def dump_mps():
     s.store(t)
 
 def get_status(uptime):
-    embed = discord.Embed(tile="Status", description=f"**Uptime: {uptime / 60} minutes**", color=0xfc8403)
+    embed = discord.Embed(tile="Status", description=f"**Uptime: {round(uptime / 60, 2)} hours**", color=0xfc8403)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/895721446054166599/895721488777347132/kawii-chan.png")
     embed.add_field(name="Music Players", value=len(guild_mps.keys()), inline=False)
     ctp = psutil.cpu_times_percent(interval=1)
