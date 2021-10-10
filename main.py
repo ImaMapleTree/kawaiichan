@@ -249,6 +249,7 @@ async def minutetick():
         await backend.expire_players()
         await backend.mark_alone()
         await backend.check_calendar()
+        await backend.tick(uptime)
         await asyncio.sleep(60)
         uptime += 1
 

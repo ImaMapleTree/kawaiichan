@@ -37,6 +37,11 @@ react_cache.get("messages", [])
 react_cache.get("guilds", {})
 react_manager = utilities.ReactChan(builtins.client, react_cache)
 
+global status_message
+global test_channel
+test_channel = None
+status_message = None
+
 def _reload_music():
     for gid in guild_mps.keys():
         if not guild_cache.get(gid): guild_cache[gid] = {}
@@ -221,11 +226,12 @@ def dump_mps():
     s = Stasis(name="MusicPlayerMemory")
     s.store(t)
 
-def get_status(uptime):
-    embed = discord.Embed(tile="Status", description=f"**Uptime: {round(uptime / 60, 2)} hours**", color=0xfc8403)
+def get_status(uptime, interval=1):
+    dt = datetime.now().strftime("%I:%M:%S %p")
+    embed = discord.Embed(tile="Status", description=f"**Uptime: {round(uptime / 60, 2)} hours** | **Current Tme:** {dt}", color=0xfc8403)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/895721446054166599/895721488777347132/kawii-chan.png")
     embed.add_field(name="Music Players", value=len(guild_mps.keys()), inline=False)
-    ctp = psutil.cpu_times_percent(interval=1)
+    ctp = psutil.cpu_times_percent(interval=interval)
     embed.add_field(name="Current CPU Usage",
                     value=f"**Processes:** {ctp.user}% | **System:** {ctp.system}% | **Idle:** {ctp.idle}%  ", inline=False)
     try:
@@ -236,13 +242,28 @@ def get_status(uptime):
     embed.add_field(name="CPU 5-Min", value=loadavg[1])
     embed.add_field(name="CPU 15-Min", value=loadavg[2])
 
+    embed.add_field(name="Memory Usage", value=f"{psutil.virtual_memory().percent}%")
+    embed.add_field(name="Disk Usage", value=f"{psutil.disk_usage('/').percent}%")
+
     process = psutil.Process()
-    cp2 = process.cpu_times()
-    embed.add_field(name="Process CPU Usage",
-                    value=f"**Source:** {cp2.user}% | **System:** {cp2.system}%", inline=False)
-    pstatus = f"**State:** {process.status()} | **Started:** {datetime.fromtimestamp(process.create_time()).strftime('%B %d, %I:%M:%S%p')}"
+    pstatus = f"**State:** {process.status()} | **Started:** {datetime.fromtimestamp(process.create_time()).strftime('%B %d, %I:%M:%S %p')}"
     embed.add_field(name="Process Status", value=pstatus, inline=False)
     embed.add_field(name=f"Working Path", value=process.cwd(), inline=False)
     embed.add_field(name=f"Python Path", value=process.exe(), inline=False)
     return embed
+
+async def tick(uptime):
+    await expire_players()
+    await mark_alone()
+    await check_calendar()
+    await update_status(uptime)
+
+async def update_status(uptime):
+    global status_message
+    global test_channel
+    if not test_channel:
+        test_channel = builtins.client.get_channel(896683147968786442)
+    if not status_message:
+        status_message = await test_channel.fetch_message(896683300008120350)
+    await status_message.edit(embed=get_status(uptime, 0))
 
