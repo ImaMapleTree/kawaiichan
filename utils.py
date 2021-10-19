@@ -3,6 +3,7 @@ import discord
 from discord_slash.utils.manage_commands import create_option, create_choice
 import datetime
 import dateutil.relativedelta
+from datetime import date
 import time
 import os
 from os import path
