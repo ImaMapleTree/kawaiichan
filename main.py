@@ -161,7 +161,7 @@ async def plan(ctx, string_date, *content):
 @slash.slash(**utils.command_generator("plan"))
 async def slash_plan(ctx, date, content):
     pass_date, days = utils.parse_date_string(date)
-    ctime = 0
+    ctime = 0   
     for i in range(days):
         ctime = None if content.find("@") == -1 else content[content.find("@ ") + 2:]
         ctime = await backend.plan(ctx, pass_date + timedelta(days=i), content.split(" @")[0], ctime)
