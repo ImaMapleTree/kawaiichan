@@ -2,7 +2,7 @@ name: plan
 description: Schedule a reminder for an upcoming event.
 [options]
 	{option1}
-		name: string_date
+		name: date
 		description: Date or date range for the reminder (ex: 9/25 or 9/25/2021 or 9/25-10/25)
 		option_type: 3
 		required: True

@@ -159,13 +159,13 @@ async def plan(ctx, string_date, *content):
 
 
 @slash.slash(**utils.command_generator("plan"))
-async def slash_plan(ctx, string_date, content):
-    pass_date, days = utils.parse_date_string(string_date)
+async def slash_plan(ctx, date, content):
+    pass_date, days = utils.parse_date_string(date)
     ctime = 0
     for i in range(days):
         ctime = None if content.find("@") == -1 else content[content.find("@ ") + 2:]
         ctime = await backend.plan(ctx, pass_date + timedelta(days=i), content.split(" @")[0], ctime)
-    await ctx.send(f"**{content.split(' @')[0]}** scheduled for **{string_date}** at **{ctime}**")
+    await ctx.send(f"**{content.split('  @')[0]}** scheduled for **{date}** at **{ctime}**")
 
 @slash.subcommand(base="react", subcommand_group="message", **utils.command_generator("message_create"))
 async def slash_react_message_create(ctx, title=None, description=None):
