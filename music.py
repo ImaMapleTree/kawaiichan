@@ -3,7 +3,7 @@ import collections
 import math
 
 import discord
-import yt_dlp as youtube_dl
+import youtube_dl
 import time
 import random
 
@@ -25,7 +25,7 @@ ytdl_format_options = {
     'geo_bypass_country': 'US',
     'cachedir': False,
     "username": "kawaiichan@gmail.com",
-    "password": "shinxshinx6820"
+    "password": "shinxshinx6820",
 }
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
