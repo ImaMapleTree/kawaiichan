@@ -5,7 +5,7 @@ from datetime import datetime
 import psutil
 from pytz import timezone
 
-import utilities
+import reactions
 
 tz = timezone('US/Eastern')
 
@@ -35,7 +35,7 @@ react_cache_path = os.path.join(os.getcwd(), "cache/react_cache.json")
 react_cache = utils.JOpen(react_cache_path, "r+", forced=True)
 react_cache.get("messages", [])
 react_cache.get("guilds", {})
-react_manager = utilities.ReactChan(builtins.client, react_cache)
+react_manager = reactions.ReactChan(builtins.client, react_cache)
 
 global status_message
 global test_channel

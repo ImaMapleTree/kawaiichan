@@ -7,6 +7,14 @@ from multiprocessing.shared_memory import SharedMemory
 import psutil
 
 
+'''
+A custom library for saving data across processes, needs a lot of work still but seems to work consistently across
+Windows machines.
+
+Evan Cowin
+'''
+
+
 class NoStasisError(Exception):
     def __init__(self):
         super().__init__("Method requires prior-stasis through means such as Stasis.store().")
