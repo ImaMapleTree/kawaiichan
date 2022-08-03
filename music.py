@@ -22,7 +22,6 @@ ytdl_format_options = {
     'quiet': True,
     'no_warnings': True,
     'default_search': 'auto',
-    'geo_bypass_country': 'US',
     'cachedir': False,
     "username": "kawaiichan@gmail.com",
     "password": "shinxshinx6820",
@@ -186,6 +185,7 @@ class MusicPlayer:
             else:
                 self.persistent_message = message
 
+        print("QUERY:", query)
         player = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume, initialize=initialize)
         self.queue.append([player, self.get_context(player), ctx])
         await self.check_song(ctx)

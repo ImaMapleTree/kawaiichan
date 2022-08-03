@@ -3,11 +3,21 @@ from discord.ext.commands.bot import Bot
 import random
 import copy
 
-class ReactChan(): #Probably a 1 instance class created in the backend
-    DEFAULT_JSON = {"auto_roles": {}, "reaction_type": {}}
-    EMOJI_LIST= ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","🙃","😉","😊","😇","🥰","😍","🤩","😘","😗","☺️","😚","😙","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😶‍","🌫️","😏","😒","🙄","😬","😮","‍💨","🤥","😌","😔","😪","🤤","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","🥴","😵","😵‍","💫","🤯","🤠","🥳","😎","🤓","🧐","😕","😟","🙁","☹️","😮","😯","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👽","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🙈","🙉","🙊","💋","💌","💘"]
 
-    embed = discord.Embed(title="Reaction Manager", description="Add a reaction to get started!\nUse /react message help for more info!", color=0xfc8403)
+class ReactChan:  # Probably a 1 instance class created in the backend
+    DEFAULT_JSON = {"auto_roles": {}, "reaction_type": {}}
+    EMOJI_LIST = ["😀", "😃", "😄", "😁", "😆", "😅", "🤣", "😂", "🙂", "🙃", "😉", "😊", "😇", "🥰", "😍", "🤩", "😘",
+                  "😗", "☺️", "😚", "😙", "😋", "😛", "😜", "🤪", "😝", "🤑", "🤗", "🤭", "🤫", "🤔", "🤐", "🤨", "😐",
+                  "😑", "😶", "😶‍", "🌫️", "😏", "😒", "🙄", "😬", "😮", "‍💨", "🤥", "😌", "😔", "😪", "🤤", "😴",
+                  "😷", "🤒", "🤕", "🤢", "🤮", "🤧", "🥵", "🥶", "🥴", "😵", "😵‍", "💫", "🤯", "🤠", "🥳", "😎", "🤓",
+                  "🧐", "😕", "😟", "🙁", "☹️", "😮", "😯", "😲", "😳", "🥺", "😦", "😧", "😨", "😰", "😥", "😢", "😭",
+                  "😱", "😖", "😣", "😞", "😓", "😩", "😫", "🥱", "😤", "😡", "😠", "🤬", "😈", "👿", "💀", "☠️", "💩",
+                  "🤡", "👹", "👺", "👻", "👽", "👾", "🤖", "😺", "😸", "😹", "😻", "😼", "😽", "🙀", "😿", "😾", "🙈",
+                  "🙉", "🙊", "💋", "💌", "💘"]
+
+    embed = discord.Embed(title="Reaction Manager",
+                          description="Add a reaction to get started!\nUse /react message help for more info!",
+                          color=0xfc8403)
 
     def __init__(self, client, react_cache):
         self.client = client
@@ -32,14 +42,13 @@ class ReactChan(): #Probably a 1 instance class created in the backend
         self.react_cache.save()
         return "Created react message!"
 
-
     async def add_auto_role(self, channel, role, emoji=None):
         guild = channel.guild
         self.react_cache.get("guilds", {})
         channel_object = self.get_channel_object(guild, channel)
         if not channel_object:
             return "There must be a react-message present in this channel to use this command. Create one through /react message create"
-        message : discord.Message = await channel.fetch_message(channel_object["message"])
+        message: discord.Message = await channel.fetch_message(channel_object["message"])
 
         if not emoji:
             re = 0
@@ -88,7 +97,7 @@ class ReactChan(): #Probably a 1 instance class created in the backend
         channel_object = guild_object["channels"].get(str(channel.id))
         return channel_object
 
-    async def process_raw_reaction(self, member : discord.Member, message, emoji):
+    async def process_raw_reaction(self, member: discord.Member, message, emoji):
         emoji = str(emoji)
         channel_object = self.get_channel_object_from_message(message)
         if not channel_object:
@@ -121,9 +130,9 @@ class ReactChan(): #Probably a 1 instance class created in the backend
 
     async def update_embed(self, message, channel_object):
         embed = message.embeds[0]
-        roles = [f"{emoji} = **{message.guild.get_role(role).name}**" for emoji, role in channel_object["auto_roles"].items()]
+        roles = [f"{emoji} = **{message.guild.get_role(role).name}**" for emoji, role in
+                 channel_object["auto_roles"].items()]
         new_embed = discord.Embed(title=embed.title, description=embed.description, color=embed.color)
         if roles:
             new_embed.add_field(name="Roles:", value="\n".join(roles))
         await message.edit(embed=new_embed)
-

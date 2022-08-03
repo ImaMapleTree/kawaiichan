@@ -2,7 +2,6 @@ import asyncio
 import os
 from datetime import datetime, timedelta
 
-import psutil
 from pytz import timezone
 import discord
 from discord.ext import commands
@@ -14,8 +13,9 @@ import sys
 
 from datastasis import Stasis
 
+
 tz = timezone('US/Eastern')
-client = hookcord.Bot(intents=discord.Intents.default(), command_prefix=commands.when_mentioned_or("k!"))
+client = hookcord.Bot(intents=discord.Intents.all(), command_prefix=commands.when_mentioned_or("k!"))
 builtins.client = client
 
 global guild_settings
@@ -90,7 +90,7 @@ async def on_guild_join(guild):
 
 
 @client.event
-async def on_message(message):
+async def on_message(message: discord.Message):
     global guild_settings
     await client.process_commands(message)
     if message.channel.name == "song-requests":

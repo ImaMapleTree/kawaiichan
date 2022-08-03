@@ -228,7 +228,7 @@ def dump_mps():
 
 def get_status(uptime, interval=1):
     dt = datetime.now().strftime("%I:%M:%S %p")
-    embed = discord.Embed(tile="Status", description=f"**Uptime: {round(uptime / 60, 2)} hours** | **Current Tme:** {dt}", color=0xfc8403)
+    embed = discord.Embed(title="Status", description=f"**Uptime: {round(uptime / 60, 2)} hours** | **Current Tme:** {dt}", color=0xfc8403)
     embed.set_thumbnail(url="https://cdn.discordapp.com/attachments/895721446054166599/895721488777347132/kawii-chan.png")
     embed.add_field(name="Music Players", value=len(guild_mps.keys()), inline=False)
     ctp = psutil.cpu_times_percent(interval=interval)
@@ -265,5 +265,5 @@ async def update_status(uptime):
         test_channel = builtins.client.get_channel(896683147968786442)
     if not status_message:
         status_message = await test_channel.fetch_message(896683300008120350)
-    await status_message.edit(embed=get_status(uptime, 0))
+    #await status_message.edit(embed=get_status(uptime, 0))
 
