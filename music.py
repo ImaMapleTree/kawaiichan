@@ -35,7 +35,7 @@ ytdl_format_options = {
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
-FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -sn -dn'}
+FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -sn -dn -c:v libx264 -fflags +igndts'}
 
 global ytdl
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
