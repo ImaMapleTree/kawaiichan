@@ -399,6 +399,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         else:
             subdata = data
         filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
+        print(filename)
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=subdata,
