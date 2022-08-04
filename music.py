@@ -394,8 +394,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
         other_data = None
         if 'entries' in data and len(data['entries']) > 0:
             # take first item from a playlist
-            subdata = data['entries'].pop(0)
-            other_data = data['entries']
+            other_data = list(data['entries'])
+            subdata = other_data.pop(0)
         else:
             subdata = data
         filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
