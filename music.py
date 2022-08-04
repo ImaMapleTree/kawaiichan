@@ -392,7 +392,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
 
         other_data = None
-        if 'entries' in data and len(data['entries'] > 0):
+        if 'entries' in data and len(data['entries']) > 0:
             # take first item from a playlist
             subdata = data['entries'].pop(0)
             other_data = data['entries']
