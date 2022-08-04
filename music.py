@@ -15,6 +15,8 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
     'format': 'bestaudio/best',
+    'extract_audio': True,
+    'audioformat:': 'ogg',
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
@@ -23,7 +25,7 @@ ytdl_format_options = {
     'no_warnings': True,
     'default_search': 'auto',
     'cachedir': False,
-    "username": "kawaiichan@gmail.com",
+    "username": "kawaiichanbot@gmail.com",
     "password": "shinxshinx6820",
 }
 
