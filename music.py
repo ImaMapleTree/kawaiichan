@@ -389,11 +389,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_query(cls, url, *, loop=None, stream=True, volume=0.5, initialize=True):
         loop = loop or asyncio.get_event_loop()
         ytdl.cache.remove()
-        print("Creating source")
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
 
         other_data = None
-        if 'entries' in data:
+        if 'entries' in data and len(data['entries'] > 0):
             # take first item from a playlist
             subdata = data['entries'].pop(0)
             other_data = data['entries']
