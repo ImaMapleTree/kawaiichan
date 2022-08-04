@@ -15,7 +15,6 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 
 ytdl_format_options = {
-    'format': '(bestvideo+bestaudio/bestvideo)[protocol!*=http_dash_segments]/bestvideo+bestaudio/best',
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
@@ -31,7 +30,8 @@ ytdl_format_options = {
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
 ffmpeg_options = {
-    'options': '-vn'
+    'options': '-vn',
+    'max_muxing_queue_size': "9999"
 }
 
 global ytdl
