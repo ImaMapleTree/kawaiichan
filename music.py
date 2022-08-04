@@ -25,6 +25,12 @@ ytdl_format_options = {
     'cachedir': False,
     "username": "kawaiichanbot@gmail.com",
     "password": "shinxshinx6820",
+    'outtmpl': 'music',
+    'postprocessors': [{
+        'key': 'FFmpegExtractAudio',
+        'preferredcodec': 'mp3',
+        'preferredquality': '128',
+    }],
 }
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
