@@ -29,10 +29,7 @@ ytdl_format_options = {
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
-ffmpeg_options = {
-    'options': '-vn',
-    'max_muxing_queue_size': "9999"
-}
+FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn'}
 
 global ytdl
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -403,18 +400,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=subdata,
+        return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTS), data=subdata,
                    volume=volume, others=other_data, filename=filename)
 
 
     @classmethod
     def from_subdata(cls, data, stream=True, volume=0.5):
         filename = data['formats'][3]['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data,
+        return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTS), data=data,
                    volume=volume, filename=filename)
 
     def copy(self):
-        return YTDLSource(discord.FFmpegPCMAudio(self.filename, **ffmpeg_options), data=self.data, volume=self.volume, filename=self.filename)
+        return YTDLSource(discord.FFmpegPCMAudio(self.filename, **FFMPEG_OPTS), data=self.data, volume=self.volume, filename=self.filename)
 
     def prepare(self):
         if not self.initialized:
