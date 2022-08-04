@@ -3,7 +3,8 @@ import collections
 import math
 
 import discord
-import youtube_dl
+import yt_dlp as youtube_dl
+#import youtube_dl
 import time
 import random
 
@@ -15,8 +16,6 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 ytdl_format_options = {
     'format': '(bestvideo+bestaudio/bestvideo)[protocol!*=http_dash_segments]/bestvideo+bestaudio/best',
-    'extract_audio': True,
-    'audioformat:': 'ogg',
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
@@ -390,6 +389,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_query(cls, url, *, loop=None, stream=True, volume=0.5, initialize=True):
         loop = loop or asyncio.get_event_loop()
         ytdl.cache.remove()
+        print("Creating source")
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
 
         other_data = None
@@ -399,7 +399,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             other_data = data['entries']
         else:
             subdata = data
-        filename = subdata['formats'][0]['url'] if stream else ytdl.prepare_filename(subdata)
+        filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
         return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=subdata,
@@ -408,12 +408,12 @@ class YTDLSource(discord.PCMVolumeTransformer):
 
     @classmethod
     def from_subdata(cls, data, stream=True, volume=0.5):
-        filename = data['formats'][0]['url'] if stream else ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, before_options=beforeArgs, **ffmpeg_options), data=data,
+        filename = data['formats'][3]['url'] if stream else ytdl.prepare_filename(data)
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data,
                    volume=volume, filename=filename)
 
     def copy(self):
-        return YTDLSource(discord.FFmpegPCMAudio(self.filename, before_options=beforeArgs, **ffmpeg_options), data=self.data, volume=self.volume, filename=self.filename)
+        return YTDLSource(discord.FFmpegPCMAudio(self.filename, **ffmpeg_options), data=self.data, volume=self.volume, filename=self.filename)
 
     def prepare(self):
         if not self.initialized:
