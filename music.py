@@ -14,7 +14,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 
 ytdl_format_options = {
-    'format': 'bestaudio/best',
+    'format': '(bestvideo+bestaudio/bestvideo)[protocol!*=http_dash_segments]/bestvideo+bestaudio/best',
     'extract_audio': True,
     'audioformat:': 'ogg',
     'nocheckcertificate': True,
@@ -187,7 +187,6 @@ class MusicPlayer:
             else:
                 self.persistent_message = message
 
-        print("QUERY:", query)
         player = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume, initialize=initialize)
         self.queue.append([player, self.get_context(player), ctx])
         await self.check_song(ctx)
@@ -403,7 +402,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         filename = subdata['formats'][0]['url'] if stream else ytdl.prepare_filename(subdata)
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
-        return cls(discord.FFmpegPCMAudio(filename, before_options=beforeArgs, **ffmpeg_options), data=subdata,
+        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=subdata,
                    volume=volume, others=other_data, filename=filename)
 
 
