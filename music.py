@@ -15,6 +15,9 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 
 
 ytdl_format_options = {
+    'format': 'bestaudio/best',
+    'extract_audio': True,
+    "outtmpl": "music",
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
@@ -25,17 +28,11 @@ ytdl_format_options = {
     'cachedir': False,
     "username": "kawaiichanbot@gmail.com",
     "password": "shinxshinx6820",
-    'outtmpl': 'music',
-    'postprocessors': [{
-        'key': 'FFmpegExtractAudio',
-        'preferredcodec': 'mp3',
-        'preferredquality': '128',
-    }],
 }
 
 beforeArgs = "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5"
 
-FFMPEG_OPTS = {'before_options': '-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5', 'options': '-vn -sn -dn -c:v libx264 -fflags +igndts'}
+FFMPEG_OPTS = {}
 
 global ytdl
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
@@ -394,7 +391,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_query(cls, url, *, loop=None, stream=True, volume=0.5, initialize=True):
         loop = loop or asyncio.get_event_loop()
         ytdl.cache.remove()
-        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=False))
+        data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=True))
 
         other_data = None
         if 'entries' in data and len(data['entries']) > 0:
@@ -403,7 +400,8 @@ class YTDLSource(discord.PCMVolumeTransformer):
             subdata = other_data.pop(0)
         else:
             subdata = data
-        filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
+        #filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
+        filename = "music"
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
         return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTS), data=subdata,
