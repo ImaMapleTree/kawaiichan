@@ -408,7 +408,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
             subdata = data
         filename = subdata.get('title') if data.get('title') else "No Title Available"
 
-        filename = "".join([c for c in filename if ((c.isalpha() or c.isdigit()) and c.isascii()) or c==' ' or c == "-" or c == "."]).lstrip().rstrip().replace(" ", "_") + ".webm"
+        filename = "".join([c for c in filename if ((c.isalpha() or c.isdigit()) and c.isascii()) or c==' ' or c == "-" or c == "."]).lstrip().rstrip().replace(" ", "_").replace("__", "_") + ".webm"
 
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
