@@ -1,0 +1,8 @@
+name: playlist
+description: View and manage your playlists
+[options]
+	{name}
+		name: name
+		description: Name of playlist
+		option_type: 3
+		required: false

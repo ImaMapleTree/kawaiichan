@@ -72,12 +72,9 @@ async def on_raw_reaction_add(payload):
     emoji = emoji.name
     if emoji == '⏯️': await backend.pause(None, message)
     if emoji == '⏹️': await backend.stop(None, message)
-    if emoji == '⏮️': await backend.previous(None, message)
     if emoji == '⏭️': await backend.skip(None, message)
     if emoji == '🔁': await backend.loop(None, message)
     if emoji == '🔀': await backend.shuffle(None, message)
-    if emoji == '⭐': await backend.add_to_playlist(None, message)
-    if emoji == '❌': await backend.remove_from_playlist(None, message)
 
 
 @client.event
@@ -86,7 +83,7 @@ async def on_guild_join(guild):
     msg = await channel.send(
         content="**__Queue List__:**\nJoin a voice channel and queue songs by name or url in here.",
         embed=utils.default_embed)
-    await utils.validate_reactions(msg, '😀')
+    await utils.validate_reactions(msg, discord.PartialEmoji.from_str('😀'))
 
 
 @client.event
@@ -121,23 +118,6 @@ async def on_message(message: discord.Message):
         else:
             await backend.play(None, message.content, message=message)
 
-
-@slash.subcommand(base="set", **utils.command_generator("set_dj_role"))
-async def use_dj_role(ctx, role=None):
-    global guild_settings
-    if not ctx.author.permissions_in(ctx.channel).administrator: return await ctx.send(
-        "You don't have permission for that (Administrator only)", hidden=True)
-    aid = str(ctx.author.guild.id)
-    if not aid in guild_settings: guild_settings[aid] = {}
-    if not role:
-        guild_settings[aid]["music_role"] = None
-        utils.JOpen(guild_settings_path, "w+", guild_settings)
-        return await ctx.send("Removed music role", hidden=True)
-    guild_settings[aid]["music_role"] = role.id
-    utils.JOpen(guild_settings_path, "w+", guild_settings)
-    return await ctx.send(f"Set music role as **{role}**", hidden=True)
-
-
 @client.command(pass_context=True)
 async def restart(ctx):
     if ctx.message.author.id not in [211664640831127553]: return
@@ -146,61 +126,12 @@ async def restart(ctx):
     # os.execv(sys.executable, [sys.executable] + [os.path.abspath(os.path.join(os.getcwd(), sys.argv[0]))])
     os.execv(sys.executable, [sys.argv[0]])
 
-
-@client.command(pass_context=True)
-async def plan(ctx, string_date, *content):
-    pass_date, days = utils.parse_date_string(string_date)
-    content = " ".join(content)
-    ctime = 0
-    for i in range(days):
-        ctime = None if content.find("@") == -1 else content[content.find("@ ") + 2:]
-        ctime = await backend.plan(ctx, pass_date + timedelta(days=i), content.split(" @")[0], ctime)
-    await ctx.send(f"**{content.split(' @')[0]}** scheduled for **{string_date}** at **{ctime}**")
+@client.command(name="playlist", pass_context=True)
+async def _playlist(ctx, name):
+    await backend.playlist(ctx, name)
 
 
-@slash.slash(**utils.command_generator("plan"))
-async def slash_plan(ctx, date, content):
-    pass_date, days = utils.parse_date_string(date)
-    ctime = 0   
-    for i in range(days):
-        ctime = None if content.find("@") == -1 else content[content.find("@ ") + 2:]
-        ctime = await backend.plan(ctx, pass_date + timedelta(days=i), content.split(" @")[0], ctime)
-    await ctx.send(f"**{content.split('  @')[0]}** scheduled for **{date}** at **{ctime}**")
 
-@slash.subcommand(base="react", subcommand_group="message", **utils.command_generator("message_create"))
-async def slash_react_message_create(ctx, title=None, description=None):
-    status_message = await backend.create_react_message(ctx.channel, title, description)
-    await ctx.send(status_message, hidden=True)
-
-@slash.subcommand(base="react", subcommand_group="message", **utils.command_generator("message_delete"))
-async def slash_react_message_delete(ctx):
-    status_message = await backend.delete_react_message(ctx.channel)
-    await ctx.send(status_message, hidden=True)
-
-@slash.subcommand(base="react", subcommand_group="auto_role", **utils.command_generator("auto_role_add"))
-async def slash_react_role_add(ctx, role, emoji=None):
-    status_message = await backend.add_auto_role(ctx.channel, role, emoji)
-    await ctx.send(status_message, hidden=True)
-
-@slash.subcommand(base="react", subcommand_group="reaction", **utils.command_generator("emoji_remove"))
-async def slash_reaction_delete(ctx, emoji):
-    status_message = await backend.delete_reaction(ctx.channel, emoji)
-    await ctx.send(status_message, hidden=True)
-
-@client.command(pass_context=True)
-async def calendar(ctx, date=None):
-    if not date:
-        now = datetime.now(tz=tz)
-        mdy = [str(now.month), str(now.day), str(now.year)]
-    else:
-        mdy = date.split("/")
-    if len(mdy) == 3:
-        month = mdy[0]
-        year = mdy[2]
-    else:
-        month = mdy[0]
-        year = mdy[1]
-    await backend.calendar(ctx, month, year)
 
 
 @client.command(pass_context=True)

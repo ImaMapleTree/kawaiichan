@@ -8,6 +8,7 @@ import yt_dlp as youtube_dl
 import time
 import random
 
+import os
 import utils
 import spotify
 
@@ -17,7 +18,7 @@ youtube_dl.utils.bug_reports_message = lambda: ''
 ytdl_format_options = {
     'format': 'bestaudio/best',
     'extract_audio': True,
-    "outtmpl": "music",
+    "outtmpl": "%(title)s.%(ext)s",
     'nocheckcertificate': True,
     'restrictfilenames': True,
     'ignoreerrors': True,
@@ -158,8 +159,8 @@ class MusicPlayer:
             pass
         if not song_container[2].voice_client: self._end_song(self.persistent_message, self._reconstruct(song_container))
         else: song_container[2].voice_client.play(song_container[0].prepare(), after=lambda x: self._end_song(self.persistent_message, self._reconstruct(song_container)))
-        while song_container[2].voice_client.is_playing():
-            await asyncio.sleep(1)
+
+
 
     @staticmethod
     def _reconstruct(song_container):
@@ -172,9 +173,11 @@ class MusicPlayer:
         self.current_song = None
         if self.looped:
             self.queue.append(song_container)
-        self.history.appendleft(song_container)
+        #self.history.appendleft(song_container)
         self.client.loop.create_task(self.check_song(message=msg))
         self.last_song_timestamp = time.time()
+        try: os.remove(song_container[0].filename)
+        except OSError: pass
 
     def _set_status(self, embed):
         embed.set_footer(text=f"Looping: {self.looped} | Shuffling: {self.shuffled}", icon_url="https://static.wikia.nocookie.net/maid-dragon/images/5/57/Kanna_Anime.png")
@@ -188,7 +191,7 @@ class MusicPlayer:
             else:
                 self.persistent_message = message
 
-        player = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume, initialize=initialize)
+        player: YTDLSource = await YTDLSource.from_query(query, loop=self.client.loop, stream=True, volume=self._source_volume, initialize=initialize)
         self.queue.append([player, self.get_context(player), ctx])
         await self.check_song(ctx)
         if player.others is not None:
@@ -276,6 +279,7 @@ class MusicPlayer:
         if self.paused: ctx.voice_client.pause()
         else: ctx.voice_client.resume()
 
+    '''    
     async def previous(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
         self.queue.insert(0, self.history.popleft())
@@ -283,6 +287,7 @@ class MusicPlayer:
         await asyncio.sleep(0.5)
         self.queue.insert(0, self.history.popleft())
         await self.update_queue_info()
+    '''
 
     async def shuffle(self, ctx, message=None):
         ctx = await self._ctx_wrapper(ctx, message)
@@ -392,6 +397,7 @@ class YTDLSource(discord.PCMVolumeTransformer):
         loop = loop or asyncio.get_event_loop()
         ytdl.cache.remove()
         data = await loop.run_in_executor(None, lambda: ytdl.extract_info(url, download=True))
+        print("\n")
 
         other_data = None
         if 'entries' in data and len(data['entries']) > 0:
@@ -400,8 +406,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
             subdata = other_data.pop(0)
         else:
             subdata = data
-        #filename = subdata['formats'][3]['url'] if stream else ytdl.prepare_filename(subdata)
-        filename = "music"
+        filename = subdata.get('title') if data.get('title') else "No Title Available"
+
+        filename = "".join([c for c in filename if ((c.isalpha() or c.isdigit()) and c.isascii()) or c==' ' or c == "-" or c == "."]).lstrip().rstrip().replace(" ", "_") + ".webm"
+
         if not initialize:
             return cls(None, data=subdata, volume=volume, others=other_data, filename=filename)
         return cls(discord.FFmpegPCMAudio(filename, **FFMPEG_OPTS), data=subdata,
@@ -423,8 +431,10 @@ class YTDLSource(discord.PCMVolumeTransformer):
         return self
 
     def cleanup(self, *args, **kwargs):
-        try: super().cleanup()
-        except AttributeError: pass
+        try:
+            super().cleanup()
+        except AttributeError:
+            pass
 
 class ImitationSource():
     def __init__(self, data, stream=True, volume=0.5):

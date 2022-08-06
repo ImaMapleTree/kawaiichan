@@ -1,6 +1,8 @@
 from discord.ext.commands import core, bot, errors
 import discord_slash
 
+class HookedContext(discord_slash.SlashContext):
+	pass
 
 class HookedMixin(core.GroupMixin):
 	def __init__(self, *args, **kwargs):

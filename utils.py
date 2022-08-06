@@ -22,7 +22,7 @@ def create_default_embed(description="To add a song to queue, type a title in th
     return embed
 
 async def validate_reactions(message, emoji):
-    expected_reactions = ['⏯️', '⏹️', '⏮️', '⏭️', '🔁', '🔀', '⭐', '❌']
+    expected_reactions = ['⏯️', '⏹️', '⏭️', '🔁', '🔀']
     actual_reactions = [reaction.emoji for reaction in message.reactions]
     i = 0
     reactions = actual_reactions if len(actual_reactions) > len(expected_reactions) else expected_reactions

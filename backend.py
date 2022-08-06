@@ -6,11 +6,13 @@ import psutil
 from pytz import timezone
 
 import reactions
+from playlist import playlist_add
 
 tz = timezone('US/Eastern')
 
 import discord
 
+from hookcord import HookedContext
 import kalendar
 import music
 import builtins
@@ -261,9 +263,8 @@ async def tick(uptime):
 async def update_status(uptime):
     global status_message
     global test_channel
-    if not test_channel:
-        test_channel = builtins.client.get_channel(896683147968786442)
-    if not status_message:
-        status_message = await test_channel.fetch_message(896683300008120350)
     #await status_message.edit(embed=get_status(uptime, 0))
 
+
+async def playlist(ctx: HookedContext, name):
+    await playlist_add(ctx, name)
